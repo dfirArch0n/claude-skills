@@ -10,6 +10,15 @@
 - **Source:** <link or citation; a public source if this will ever be shared>
 - **What it gave us:** <indicators, behaviors, a technique, a feeling>
 
+### Source check
+
+Everything below inherits this. Read the source before building on it.
+
+- **Source read directly?** yes | no — <if no, say why and treat what follows as provisional>
+- **What it actually contains:** <count each indicator type; "51 hashes, 0 IPs, 0 domains">
+- **Where it contradicts the request:** <or "nothing; the request matched the source">
+- **What it contains that nobody mentioned:** <command-line tables, TTP narrative, CVEs>
+
 ## The climb
 
 | Rung | What the climb yielded |

@@ -8,6 +8,7 @@ into a hypothesis worth spending a week on.
 - [The pyramid](#the-pyramid)
 - [How to climb](#how-to-climb)
 - [Worked climb: a ransomware advisory](#worked-climb-a-ransomware-advisory)
+- [Worked trigger check: the premise was wrong](#worked-trigger-check-the-premise-was-wrong)
 - [Worked climb that stalls: a phishing IOC dump](#worked-climb-that-stalls-a-phishing-ioc-dump)
 - [Worked climb that overreaches](#worked-climb-that-overreaches)
 - [ABLE, weak to strong](#able-weak-to-strong)
@@ -78,6 +79,33 @@ a bucket B or C finding you would never have reached from the hash list.
 **Evidence** it needs: process creation with parent lineage, service
 installation, and a reliable inventory of which hosts are *supposed* to run RMM.
 That last one is usually the gap this hunt discovers.
+
+## Worked trigger check: the premise was wrong
+
+**Trigger.** "CISA just dropped an advisory on Akira — big list of IPs and
+hashes plus some notes on how they get in and stay in."
+
+Read the advisory. AA24-109A contains **51 file hashes and zero IP addresses,
+zero domains, zero URLs.** The network indicator list the request is built
+around does not exist.
+
+Three things follow, and none of them are available to a hunter who skipped the
+source:
+
+- **The IOC sweep shrinks to a hash sweep**, worth an hour rather than a day.
+- **A question gets raised that is worth more than the hunt**: if someone is
+  holding a list of Akira IPs, where did it come from? Another vendor, a stale
+  blog, or a misattribution — all three change what you do next.
+- **The advisory's real value surfaces.** Its command-line tables and TTP
+  narrative are what support a rung-6 hunt, and the request never mentioned them.
+
+This is not a hypothetical. It is what the skill's own evaluation found: given
+this prompt, the run that skipped the source check accepted the premise and
+built a network sweep against a lookup table that could never be populated. The
+run that read the advisory first caught it in minutes.
+
+The cost of checking is one read. The cost of not checking is a hunt aimed at
+data that does not exist, discovered by whoever runs the queries.
 
 ## Worked climb that stalls: a phishing IOC dump
 

@@ -1,5 +1,12 @@
 # Hunt report: {{SLUG}}
 
+> **Before writing this: search the package for `[FILL`, `<`, and `TBD`.**
+> Every statement of fact in this report traces to a field that is filled in.
+> Anything still a placeholder is written here as *unknown*, never as
+> *confirmed*. A report that asserts what the gap register marks unverified
+> manufactures exactly the false confidence this hunt exists to remove — and it
+> is the sentence a stakeholder will quote back at you.
+
 - **Dates:** {{DATE}} – <close date>
 - **Hunter:** {{HUNTER}}
 - **Rung hunted at:** <1–6>  |  **Hunt or sweep:** <hunt | IOC sweep>
@@ -24,6 +31,14 @@ Written for someone who will read nothing else.>
 ## What we cannot see
 
 <The gap register, in prose. This section is the one that funds collection.>
+
+| Gap | Established how | Status |
+|---|---|---|
+| <GAP-00N> | measured / reported by owner / **assumed** | verified / unverified |
+
+<A gap that is assumed rather than measured is still worth raising, and is
+worth raising as an assumption. "We believe X is not logged" and "X is not
+logged" ask different things of the reader.>
 
 ## Coverage
 

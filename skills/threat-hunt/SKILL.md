@@ -29,6 +29,14 @@ this skill is: four stages, each producing a file, all of them written into one
 - **A missing input never stops the hunt.** An absent log source, an empty field,
   a conversion that fails — record it, record the confidence it costs, continue.
   A step that quietly did nothing must never read as a step that succeeded.
+- **Cite what you assert about the outside world.** Anything the human might act
+  on — what a report says, which table holds a log source, a retention default, a
+  deprecation date, an ATT&CK mapping — carries a link or a document reference.
+  Recalled facts about vendor telemetry age badly and are stated with confidence
+  either way, so an uncited claim and a checked one are indistinguishable on the
+  page. Where you are working from memory and cannot check, mark it
+  `unverified` rather than dropping it; a flagged recollection is useful and a
+  confident one is a trap.
 
 ## Stage 0 — Frame the trigger
 
@@ -43,7 +51,34 @@ exists:
 | Anomaly or hunch | A feeling | All of it — and the so-what gate bites hardest here |
 | Executive question | A deadline | Everything, fast |
 
-**Done when** the trigger and its source are written into the charter.
+### Check the trigger against its source
+
+**Read the source yourself before you build on it.** Everything downstream —
+the climb, the hypothesis, the queries, the scope — inherits whatever the
+trigger claims, so a wrong premise is not a small error that shows up later. It
+is the whole hunt pointed at the wrong thing.
+
+The person describing a report has usually skimmed it. Check three things:
+
+1. **Does the source say what the request says it says?** Open the advisory or
+   ticket. Count what is actually in it.
+2. **Which indicator types are actually present**, and how many of each? A
+   request for "a big list of IPs and hashes" is worth nothing if the advisory
+   carries hashes and no addresses at all.
+3. **What does the source contain that the request did not mention?** The
+   command-line tables and TTP narrative are usually worth more than the
+   indicator list, and usually go unmentioned.
+
+Where the source contradicts the request, **say so before planning anything**,
+and hunt what the source supports. Where you cannot reach the source, write down
+what you assumed and mark it unverified — then treat every conclusion resting on
+it as provisional.
+
+A hunt built on an unchecked premise produces queries against data that does not
+exist, and nobody finds out until someone runs them.
+
+**Done when** the trigger, its source, and the result of checking one against
+the other are written into the charter.
 
 ## Stage 1 — Design
 
@@ -205,8 +240,15 @@ Produce:
   per-bucket counts, gap IDs raised. Across many hunts this file *is* the
   coverage metric. Everything as code, applied to hunting.
 
+**No claim in the report outruns the register.** Before writing it, search the
+package for remaining placeholders. Anything still unfilled is reported as
+unknown, and a gap that was assumed rather than measured says so. "We believe X
+is not logged" and "X is not logged" ask different things of the reader, and
+only one of them is honest when nobody checked.
+
 **Done when** the package holds a populated `02-gaps.yml`, `03-findings.md`,
-`05-report.md` and `metadata.yml` — even where bucket A is empty.
+`05-report.md` and `metadata.yml` — even where bucket A is empty — and no
+statement in the report rests on a field still marked as a placeholder.
 
 ## The package
 
