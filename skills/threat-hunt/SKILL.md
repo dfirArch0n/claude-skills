@@ -62,17 +62,23 @@ The person describing a report has usually skimmed it. Check three things:
 
 1. **Does the source say what the request says it says?** Open the advisory or
    ticket. Count what is actually in it.
-2. **Which indicator types are actually present**, and how many of each? A
-   request for "a big list of IPs and hashes" is worth nothing if the advisory
-   carries hashes and no addresses at all.
+2. **Which indicator types are actually present**, and how many of each? Where
+   a request for "a big list of IPs and hashes" meets an advisory carrying
+   hashes and no addresses, the hash sweep is still worth running — it is the
+   *plan built around addresses* that has to change, and the missing half is
+   worth asking about before it does.
 3. **What does the source contain that the request did not mention?** The
    command-line tables and TTP narrative are usually worth more than the
    indicator list, and usually go unmentioned.
 
 Where the source contradicts the request, **say so before planning anything**,
-and hunt what the source supports. Where you cannot reach the source, write down
-what you assumed and mark it unverified — then treat every conclusion resting on
-it as provisional.
+and hunt what the source supports.
+
+Where you cannot reach the source, the standing rule applies: record the failure
+*and what it costs*. Name which assumption you are proceeding on, which parts of
+the hypothesis rest on it, and what the coverage statement will have to say if it
+turns out to be wrong. "Unverified" on its own is a label; the value is in
+knowing which conclusions fall over with it.
 
 A hunt built on an unchecked premise produces queries against data that does not
 exist, and nobody finds out until someone runs them.
@@ -175,8 +181,8 @@ python3 $SKILL/scripts/convert.py <rule> --targets kusto:sentinel_asim splunk:sp
 ```
 
 Targets are **query languages, not plugin names** — `log_scale` is CrowdStrike
-NG-SIEM, and `crowdstrike` is not a target. `convert.py --help` lists them all
-with their pipelines. A failure on one platform never stops the others; the run
+NG-SIEM, and `crowdstrike` is not a target. `convert.py --help` lists the targets with the
+pipelines a hunt commonly wants; `sigma list pipelines <target>` is authoritative. A failure on one platform never stops the others; the run
 reports what broke and writes a manifest beside the queries.
 
 ### Know where Sigma stops

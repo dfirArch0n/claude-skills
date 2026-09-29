@@ -14,7 +14,9 @@
 
 Everything below inherits this. Read the source before building on it.
 
-- **Source read directly?** yes | no — <if no, say why and treat what follows as provisional>
+- **Source read directly?** yes | no
+- **If no — what it costs:** <the assumption you are proceeding on, which parts of the
+  hypothesis rest on it, and what the coverage statement must say if it proves wrong>
 - **What it actually contains:** <count each indicator type; "51 hashes, 0 IPs, 0 domains">
 - **Where it contradicts the request:** <or "nothing; the request matched the source">
 - **What it contains that nobody mentioned:** <command-line tables, TTP narrative, CVEs>

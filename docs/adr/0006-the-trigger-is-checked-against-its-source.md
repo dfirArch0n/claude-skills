@@ -81,9 +81,18 @@ of the reader.
 
 - One extra read at the start of every hunt, and a charter section to fill.
   Cheap against the failure it prevents.
-- Some hunts will end at Stage 0 with "the premise was wrong, here is what the
-  source actually says." That is a good outcome reported honestly, and it will
-  feel like a wasted morning to whoever asked for the hunt.
+- Some hunts will be **redirected** at Stage 0 by "the premise was wrong, here
+  is what the source actually says." That is a good outcome reported honestly,
+  and it will feel like a wasted morning to whoever asked for the hunt.
+
+  It is a redirection, not an abort, and the distinction matters because the
+  skill's standing rule is that a missing input never stops the work. A wrong
+  premise is a missing input like any other: the charter records what the source
+  actually contains, the hunt proceeds against what the source supports, and
+  where nothing is left to hunt the package still closes with a report saying
+  what was checked and why it went no further. A hunt that stops without writing
+  that down has destroyed the only durable thing it produced — the knowledge
+  that the premise was false, which is what stops the next person repeating it.
 - Reports get longer and more hedged. Gap provenance in particular adds a column
   that will often read `assumed`, which is uncomfortable and accurate.
 - The citation rule is a judgment call and will be applied unevenly. Stating the

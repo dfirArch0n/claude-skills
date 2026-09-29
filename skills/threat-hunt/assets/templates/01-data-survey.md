@@ -10,8 +10,10 @@ Run before the first query. Answer each cell with a fact, not a belief.
 
 For every partial or absent verdict above, say whether coverage **never existed**
 or **stopped**. Never existed is an engineering gap with an owner. Stopped is a
-hunt: ATT&CK Defense Impairment (TA0112) is detected precisely by signals going
-quiet. Carry the answer into `cause` in the gap register.
+hunt: signals going quiet is one of the shapes ATT&CK Defense Impairment
+(TA0112) leaves behind, alongside the positive activity — policy changes, tool
+tampering, log clearing — that the tactic also produces. Carry the answer into
+`cause` in the gap register.
 
 | Gap | Coverage shape | Cause | What you checked |
 |---|---|---|---|

@@ -90,17 +90,27 @@ check_backends() {
 
   echo "Using $sigma"
   echo "Linting the canary rule..."
-  local lint_output
+  local lint_output lint_failed=0
   # Capture rather than discard. A non-zero exit here is usually NOT a bad rule
   # -- a corrupt plugin cache reports the same way -- so swallowing stderr sends
   # the reader off to fix the wrong thing.
   if ! lint_output="$("$sigma" check "$CANARY" 2>&1)"; then
     echo "  FAILED - sigma check exited non-zero. Its output was:" >&2
     printf '%s\n' "$lint_output" | sed 's/^/      /' >&2
-    exit 1
+    lint_failed=1
+  else
+    echo "  ok"
   fi
-  echo "  ok"
   echo
+
+  # Deliberately NOT fatal. The whole point of --check is a complete picture of
+  # which backends work, and lint failures here are usually environmental (a
+  # cache pySigma cannot open) rather than a broken rule. Aborting turned one
+  # environment problem into zero information about four backends.
+  if [ "$lint_failed" -eq 1 ]; then
+    echo "Lint failed; checking the backends anyway so you get the full picture." >&2
+    echo >&2
+  fi
 
   local failures=0
   for check in "${CHECKS[@]}"; do
@@ -140,6 +150,11 @@ check_backends() {
     exit 1
   fi
   echo "All ${#CHECKS[@]} backends convert correctly."
+  if [ "$lint_failed" -eq 1 ]; then
+    echo "NOTE: every backend converts, but 'sigma check' failed -- likely a" >&2
+    echo "      cache or permissions problem rather than a rule problem." >&2
+    exit 1
+  fi
 }
 
 case "${1:-install}" in

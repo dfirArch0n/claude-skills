@@ -8,10 +8,14 @@ below says what it is for, and when to leave it alone.
 
 ## Pyramid of Pain — David Bianco, 2013
 
-Ranks indicator types by what detecting on them costs the adversary: hashes
-(seconds to change) up through TTPs (years). The spine of this skill, because it
-converts "we have indicators" into "here is the shelf life of what we are about
-to build."
+Ranks indicator types by what detecting on them costs the adversary, from a
+hash an attacker changes trivially up to TTPs they would have to relearn. The
+spine of this skill, because it converts "we have indicators" into an explicit
+judgment about how long what you build will keep working.
+
+The ranking is **relative cost, not calendar time** — the pyramid assigns no
+lifetimes, and any duration you attach is your own estimate about your own
+adversaries.
 
 **Use it** on every trigger, to decide which rung to hunt at and to name an IOC
 sweep as a sweep.

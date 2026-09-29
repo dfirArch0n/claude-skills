@@ -35,6 +35,7 @@ from typing import Protocol
 
 from huntkit.config import (
     BACKEND_WARNINGS,
+    MANIFEST_FAILURE_WARNING,
     MANIFEST_NAME,
     PIPELINE_FORMATS,
     SIGMA_BINARY,
@@ -153,9 +154,25 @@ class Conversion:
     warnings: tuple[str, ...] = ()
 
     @property
+    def clean(self) -> bool:
+        """Did this convert AND produce output with no known defect?
+
+        A query the backend is known to emit wrongly is not a success just
+        because the converter exited 0. Callers that count successes should
+        count these separately, or the hunter reads "4/4 converted" and runs a
+        query that means something other than the rule.
+        """
+        return self.succeeded and not self.warnings
+
+    @property
     def summary(self) -> str:
         """One line suitable for a terminal or a hunt report."""
-        state = "ok" if self.succeeded else "FAILED"
+        if not self.succeeded:
+            state = "FAILED"
+        elif self.warnings:
+            state = "WARN"
+        else:
+            state = "ok"
         detail = self.output_path if self.succeeded else first_error_line(self.error)
         return f"[{state}] {self.language} ({self.target}): {detail}"
 
@@ -333,15 +350,33 @@ def plan_output_names(stem: str, target_specs: Sequence[str]) -> dict[int, tuple
     counts = Counter(name for name, _, _ in parsed)
 
     names: dict[int, tuple[str, str | None]] = {}
-    for index, (name, pipeline, _) in enumerate(parsed):
+    taken: set[str] = set()
+    for index, (name, pipeline, fmt) in enumerate(parsed):
         target = TARGETS.get(name)
         if target is None:
             continue
         chosen = pipeline or target.default_pipeline
+        chosen_format = resolve_format(chosen, fmt)
+
         if counts[name] > 1 and chosen:
-            names[index] = (f"{stem}.{chosen}.{target.extension}", chosen)
+            candidate = f"{stem}.{chosen}.{target.extension}"
         else:
-            names[index] = (f"{stem}.{target.extension}", chosen)
+            candidate = f"{stem}.{target.extension}"
+
+        # Same target AND pipeline, different output format -- splunk_cim as
+        # data_model and as savedsearches, say. The pipeline alone no longer
+        # separates them, so the format joins the name. Falling through to a
+        # counter guarantees uniqueness even if a caller repeats a spec exactly,
+        # because a silent overwrite is the failure being prevented here.
+        if candidate in taken and chosen_format:
+            candidate = f"{stem}.{chosen}.{chosen_format}.{target.extension}"
+        suffix = 2
+        while candidate in taken:
+            candidate = f"{stem}.{chosen}.{suffix}.{target.extension}"
+            suffix += 1
+
+        taken.add(candidate)
+        names[index] = (candidate, chosen)
     return names
 
 
@@ -398,35 +433,49 @@ def convert_rule(
 
         conversions.append(outcome)
 
-    _write_manifest(rule_path, output_dir, conversions)
+    if not _write_manifest(rule_path, output_dir, conversions):
+        # The queries are on disk but nothing records how they were made.
+        # Reported through the outcomes so the CLI can say so rather than
+        # printing a Details path that does not exist.
+        conversions = [
+            replace(c, warnings=(*c.warnings, MANIFEST_FAILURE_WARNING)) for c in conversions
+        ]
     return conversions
 
 
 def _clear_stale_output(destination: Path, outcome: Conversion) -> Conversion:
-    """Remove an output file left by an earlier run of a now-failing conversion.
+    """Set aside an output file left by an earlier run of a now-failing conversion.
 
-    Leaving it is the dangerous option: the manifest says the conversion failed
+    Leaving it in place is dangerous: the manifest says the conversion failed
     while a plausible-looking query sits on disk, and the hunter runs logic that
-    no longer matches the rule. Only paths this run would itself have written
-    are touched, and the removal is recorded in the error text.
+    no longer matches the rule.
+
+    Deleting it is worse. This skill explicitly tells LogScale users to repair
+    generated CQL by hand, so the file at that path may be the only copy of work
+    somebody did. It is renamed to `<name>.stale` instead: the misleading
+    current-looking query is gone, and nothing a human wrote is destroyed.
     """
     if not destination.exists():
         return outcome
+    stale = destination.with_name(destination.name + ".stale")
     try:
-        destination.unlink()
+        if stale.exists():
+            stale.unlink()
+        destination.rename(stale)
     except OSError as exc:
         return replace(
             outcome,
             error=f"{outcome.error}\nStale output remains at {destination} "
-            f"and could not be removed: {exc}. Do not run it.",
+            f"and could not be set aside: {exc}. Do not run it.",
         )
     return replace(
         outcome,
-        error=f"{outcome.error}\nRemoved stale {destination.name} from an earlier run.",
+        error=f"{outcome.error}\nEarlier output moved to {stale.name}; it may "
+        "contain hand-tuned edits, so it was kept rather than deleted.",
     )
 
 
-def _write_manifest(rule_path: Path, output_dir: Path, conversions: list[Conversion]) -> None:
+def _write_manifest(rule_path: Path, output_dir: Path, conversions: list[Conversion]) -> bool:
     """Record what was run and what happened, beside the generated queries.
 
     This is the audit trail: which pipeline and format produced which file, and
@@ -436,6 +485,8 @@ def _write_manifest(rule_path: Path, output_dir: Path, conversions: list[Convers
 
     A manifest that cannot be written must not discard the conversions that
     succeeded, so the failure is reported and the results still returned.
+    Returns whether it was written, so the caller can stop presenting an
+    untraceable run as a complete one.
     """
     manifest = {
         "rule": str(rule_path),
@@ -448,3 +499,5 @@ def _write_manifest(rule_path: Path, output_dir: Path, conversions: list[Convers
         )
     except OSError as exc:
         print(f"WARNING: could not write the conversion manifest: {exc}")
+        return False
+    return True

@@ -118,6 +118,10 @@ def test_the_charter_records_a_source_check():
     assert "Source check" in charter
     assert "Source read directly?" in charter
     assert "Where it contradicts the request" in charter
+    # An unreachable source must record what it COSTS, not merely that it
+    # happened. "Unverified" on its own is a label; the value is knowing which
+    # conclusions fall over if the assumption is wrong.
+    assert "what it costs" in charter
 
 
 def test_the_skill_requires_sourcing_for_external_claims():

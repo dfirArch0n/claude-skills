@@ -16,9 +16,10 @@ That assumption is usually right and occasionally catastrophic.
 ATT&CK v19 (28 April 2026) split Defense Evasion into **Stealth (TA0005)** and
 **Defense Impairment (TA0112)**, the latter defined as "the adversary is trying
 to break security mechanisms, pipelines, and tooling so defenders can't see or
-trust what's happening." Its detection approach is not pattern matching. It is
-watching for the **absence of expected signals** and validating control
-integrity.
+trust what's happening." Much of that tactic is detected by ordinary
+positive activity — firewall modification, policy modification, safe-mode boot,
+log clearing. What is distinctive is the surface it *adds*: the **absence of
+expected signals**, and control integrity that no longer holds.
 
 Which means the artifact this stage already produces — a list of places the
 organization cannot see — is simultaneously the raw material for a hunt, and the
