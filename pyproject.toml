@@ -1,0 +1,63 @@
+[project]
+name = "claude-skills"
+version = "0.1.0"
+description = "Personal agent skills for security engineering work."
+readme = "README.md"
+# 3.11 floor on purpose. The bundled scripts ship inside a skill directory that
+# gets symlinked into arbitrary environments, so they must run on whatever
+# Python is already there. They use the standard library only, for the same
+# reason: a skill that needs `pip install` before it works is a skill that
+# silently does nothing.
+requires-python = ">=3.11"
+dependencies = []
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+    "pytest-cov>=6.0",
+]
+
+# This repository ships skills, not a distributable Python package. Telling uv
+# not to build one keeps `uv sync` from looking for a package layout that does
+# not exist.
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# The scripts live with the skill that uses them rather than in a src/ tree, so
+# that the skill directory stays self-contained when symlinked.
+pythonpath = ["skills/threat-hunt/scripts"]
+addopts = "-q --strict-markers"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["skills/threat-hunt/scripts", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "E", "W",   # pycodestyle
+    "F",        # pyflakes
+    "I",        # import sorting
+    "UP",       # pyupgrade
+    "B",        # bugbear (likely bugs)
+    "SIM",      # simplify
+    "RUF",      # ruff-specific
+    "ANN",      # require type hints
+    "D",        # docstrings
+]
+ignore = [
+    "D203",   # conflicts with D211
+    "D213",   # conflicts with D212
+    "ANN401", # allow Any where genuinely needed
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Tests explain themselves in comments rather than docstrings, and their helper
+# stubs are throwaway. Requiring full docstrings and annotations there adds
+# ceremony without adding safety.
+"tests/*" = ["D", "ANN"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"

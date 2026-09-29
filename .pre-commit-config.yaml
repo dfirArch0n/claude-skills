@@ -1,0 +1,31 @@
+# Fast checks on every commit. Lint first, then tests.
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+        # Sigma rules and hunt templates are YAML with intentional placeholder
+        # syntax; they are linted by sigma-cli, not by a generic YAML parser.
+        exclude: ^(skills/.*/assets/templates/|examples/)
+      - id: check-toml
+      - id: check-merge-conflict
+      - id: check-added-large-files
+      - id: detect-private-key        # backstop: no key material ever lands in a commit
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.14.2
+    hooks:
+      - id: ruff-check
+        args: [--fix]
+      - id: ruff-format
+
+  - repo: local
+    hooks:
+      - id: pytest
+        name: pytest
+        entry: uv run pytest
+        language: system
+        pass_filenames: false
+        types: [python]
