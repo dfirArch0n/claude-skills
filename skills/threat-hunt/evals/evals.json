@@ -1,0 +1,30 @@
+{
+  "skill_name": "threat-hunt",
+  "note": "Prompts for the skill-creator evaluation loop. Each is written the way a security leader actually types, not as a clean specification.",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "CISA just dropped an advisory on Akira ransomware - big list of IPs and hashes plus some notes on how they get in and stay in. I've got Splunk with Sysmon on most things and CrowdStrike NG-SIEM. Where do I even start with this?",
+      "expected_output": "Climbs from the indicator list to a TTP-level hypothesis rather than sweeping the IOCs, names the rung reached, produces an ABLE hypothesis that passes the three gates, and surveys telemetry before writing queries. Should produce Sigma plus converted SPL and LogScale CQL.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "want to hunt for AiTM phishing against our m365 tenant. honestly not sure we even log the right stuff for it",
+      "expected_output": "Leads with the data survey rather than queries, because the user has flagged uncertainty about collection. Produces a gap register with owners and asks, and continues the hunt on degraded evidence with reduced confidence recorded rather than stopping.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "We spent last sprint hunting for malicious scheduled tasks across the server estate and found nothing. Need to write it up for the security steering group on Thursday. Kind of feels like a waste of a sprint.",
+      "expected_output": "Refuses to let the report say 'we found nothing' without a coverage statement naming share of estate, window, confidence, and the evasion that would have survived. Surfaces the bucket B/C and gap-register value the sprint produced. Should push back on 'waste of a sprint'.",
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "Take this hunt query and make it into a real detection we can ship: index=win EventCode=4698 TaskName=\"\\\\Microsoft\\\\Windows\\\\*\" NOT user IN (svc_deploy, svc_sccm)",
+      "expected_output": "Produces an ADS-format detection candidate with Blind Spots and False Positives populated rather than just a tidied query. Should ask for the false-positive counts the hunt produced and state the expected volume, or mark the candidate a draft and name what is missing.",
+      "files": []
+    }
+  ]
+}
