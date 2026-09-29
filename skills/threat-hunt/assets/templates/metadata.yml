@@ -16,7 +16,12 @@ pyramid:
   shelf_life: null            # hours | days | weeks | months | years
 
 attack:
-  tactics: []
+  # Record the version. IDs are revoked and re-issued between releases -- v19
+  # merged T1562 into T1685 and split Defense Evasion into Stealth (TA0005) and
+  # Defense Impairment (TA0112) -- so counting techniques across hunts without
+  # this field counts two different taxonomies.
+  version: "v19"
+  tactics: []                 # e.g. ["TA0005", "TA0112"]
   techniques: []              # e.g. ["T1543.003", "T1219"]
 
 scope:

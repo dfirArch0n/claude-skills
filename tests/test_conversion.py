@@ -1,6 +1,6 @@
 """Tests for Sigma rule conversion.
 
-The behaviour under test is mostly about *failure*: this skill's standing rule
+The behavior under test is mostly about *failure*: this skill's standing rule
 is that one broken backend must not cost the hunter the other three, and that a
 step which quietly did nothing must never read as a step that succeeded.
 
@@ -82,7 +82,7 @@ def test_manifest_records_every_attempt(rule, tmp_path):
 
 def test_one_failing_backend_does_not_stop_the_others(rule, tmp_path):
     # THE design rule. A hunter with four platforms and a broken Elastic plugin
-    # must still get Splunk and Kusto queries. Before this behaviour existed,
+    # must still get Splunk and Kusto queries. Before this behavior existed,
     # the natural implementation raised on the first failure and the hunt
     # stalled on a tooling problem.
     out = tmp_path / "generated"

@@ -7,7 +7,7 @@
 ## Executive summary
 
 <Five sentences. What was hypothesised, what was searched, what was found in
-each bucket, what the organisation cannot see, and what should happen next.
+each bucket, what the organization cannot see, and what should happen next.
 Written for someone who will read nothing else.>
 
 ## What we looked for

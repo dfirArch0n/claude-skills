@@ -32,12 +32,12 @@ Bianco's point is that detecting across enough TTPs leaves an adversary two
 options: give up, or reinvent themselves from scratch. Nothing lower does that.
 
 The pyramid ranks **relative cost**, not calendar time. It does not assign
-detections a lifetime, and any duration you attach is your own judgement about
+detections a lifetime, and any duration you attach is your own judgment about
 your own adversaries — worth writing down as an estimate, worth not mistaking
 for a measurement.
 
 The rung is also not a quality score for the hunt. An IOC sweep during an active
-campaign can be exactly the right call. Recording the rung is how a programme
+campaign can be exactly the right call. Recording the rung is how a program
 learns, over many hunts, whether it is buying durable detection or churning
 indicators.
 
@@ -101,7 +101,7 @@ This is the common case. Most triggers stall. Naming the stall is the discipline
 **Trigger.** One report of a malicious scheduled task.
 
 The tempting climb goes: scheduled task → persistence → *hunt all persistence
-mechanisms*. That is a programme, not a hunt. It has no falsifiable result, no
+mechanisms*. That is a program, not a hunt. It has no falsifiable result, no
 clock that holds, and it produces a result set no one will finish reading.
 
 **Correct outcome.** Stay at one or two links: *scheduled tasks created on

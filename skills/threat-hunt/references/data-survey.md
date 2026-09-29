@@ -43,7 +43,7 @@ pipeline.
    seen in the source against the asset inventory. "EDR is deployed" usually
    means 94%, and the missing 6% is disproportionately servers.
 5. **Fidelity** — is it parsed correctly, and at what granularity? Truncated
-   command lines, normalised-away case, a timestamp in the wrong zone, and
+   command lines, normalized-away case, a timestamp in the wrong zone, and
    sampled flow records all silently change what a query means.
 6. **Blind spots** — what is known to be invisible here? Encrypted traffic
    without inspection, hosts outside the domain, contractor laptops, the
@@ -64,12 +64,21 @@ Work from the behavior to the telemetry requirement, then to the local source:
 3. Map each data component to what your estate actually produces: which agent,
    which event ID, which table.
 
-**ATT&CK v18 (October 2025) changed this page.** The old flat *Data Sources*
-listing is deprecated. Detections were replaced by Detection Strategies, which
-group Analytics, which in turn cite Log Sources and Data Components. Data
-Components survive as the logging layer and are still the right unit to survey
-against; guidance that sends you to a technique's "Data Sources" section is
-describing a page that no longer looks like that.
+**Current as of ATT&CK v19 (28 April 2026).** The old flat *Data Sources*
+listing is gone; it was replaced in v18 and the replacement matured in v19, which
+ships 697 Detection Strategies and 1,758 Analytics for Enterprise alone. Guidance
+that sends you to a technique's "Data Sources" section is describing a page that
+no longer looks like that.
+
+Two things follow for a hunter:
+
+- **The Analytics do some of Stage 2 for you.** Each one names its log sources,
+  its tunable parameters, and *where visibility gaps remain*. That last part is
+  a gap register entry written by MITRE. Start from it rather than from a blank
+  table.
+- **The so-what shifts.** When an Analytic already exists for your behavior, the
+  hunt's value is less about inventing logic and more about whether your
+  telemetry can carry it. That is exactly what this stage measures.
 
 Step 2 matters because it decouples the hunt from a vendor. "Process creation"
 is the requirement; Sysmon Event ID 1, `DeviceProcessEvents`, and
@@ -79,7 +88,45 @@ does not.
 
 Where an estate has never been mapped this way, DeTT&CT is the tool that
 formalises it — but a first pass in the survey table below gets you further than
-waiting for a programme.
+waiting for a program.
+
+## When the absence is the finding
+
+The survey's whole job is to find missing telemetry. It is worth asking, every
+time, **why** it is missing — because there are two answers and only one of them
+is an engineering problem.
+
+ATT&CK v19 split Defense Evasion into **Stealth (TA0005)** and **Defense
+Impairment (TA0112)**, defined as:
+
+> "The adversary is trying to break security mechanisms, pipelines, and tooling
+> so defenders can't see or trust what's happening."
+
+Detecting that tactic means watching for the **absence of expected signals** and
+validating control integrity. Which is to say: the thing this stage produces —
+a list of places you cannot see — is also the raw material for a hunt.
+
+**The survey already computes what tells the two apart.** Coverage is a
+measurement over time, so look at its shape:
+
+| What coverage looks like | Likely cause | Where it goes |
+|---|---|---|
+| Host never reported | Nobody deployed the sensor | Gap register, engineering owner |
+| Whole subnet never reported | Rollout missed a segment | Gap register, engineering owner |
+| Host reported, then stopped | **Someone or something stopped it** | Findings — investigate before filing |
+| Agent present, events thinned | Config changed, or tampering | Findings — investigate before filing |
+| Logs exist but with a hole | Retention, or clearing | Findings — investigate before filing |
+
+A host that never reported is a purchase order. A host that reported until
+Tuesday is a hunt.
+
+So every gap entry records which of the two it is, and what you did to decide.
+Where you could not tell, say so — an unexamined absence is the one an adversary
+is most comfortable hiding in. Relevant techniques live under TA0112, notably
+**T1685 Disable or Modify Tools** and **T1070 Indicator Removal**.
+
+This costs one column in the survey and one question per gap, and it converts
+the least interesting stage of the hunt into a second place badness can surface.
 
 ## The gap register
 
@@ -103,9 +150,14 @@ gaps:
       Cannot distinguish a service installed by the deployment system from one
       installed by hand on 39% of the Location. Reduces confidence in any
       negative result to moderate.
+    cause: engineering         # engineering | adversary | undetermined
+    cause_evidence: >
+      These hosts have never reported Sysmon events in the retention window, and
+      the gap aligns exactly with an OU the baseline GPO does not cover. No host
+      in this set stopped reporting, so nothing here points at T1685.
     owner: "Windows platform engineering"
     ask: >
-      Extend the Sysmon baseline GPO to the DC organisational unit, with
+      Extend the Sysmon baseline GPO to the DC organizational unit, with
       config coverage for Event ID 1 command line.
     raised: 2026-09-29
     hunt: 2026-09-29-rmm-persistence
@@ -114,10 +166,13 @@ gaps:
 Fields carry weight for a reason:
 
 - **`hypothesis_impact`** is what turns the gap from an IT grievance into a
-  security argument. It states what the organisation cannot see because of it.
+  security argument. It states what the organization cannot see because of it.
 - **`owner`** and **`ask`** make it actionable by someone who was not on the hunt.
 - **`hunt`** lets you show, later, that the same gap blocked four hunts — which is
   the argument that actually gets budget.
+- **`cause`** and **`cause_evidence`** force the question above to be asked and
+  answered. `undetermined` is an acceptable answer and a legitimate backlog item;
+  leaving the field off is not.
 
 ## Worked survey
 
@@ -132,7 +187,7 @@ Hypothesis: RMM agent installed on a host with no business running one
 | Inventory of hosts sanctioned to run RMM | **No** | — | — | — | — | **Absent** → GAP-003 |
 
 GAP-003 is the interesting one. There is no security telemetry missing — the
-organisation simply does not know which hosts are *supposed* to run remote-access
+organization simply does not know which hosts are *supposed* to run remote-access
 software, so no query can separate sanctioned from unsanctioned. The hunt
 proceeds by stack-ranking installs by rarity instead, and the register carries
 the real finding: an inventory nobody owns.

@@ -8,7 +8,14 @@ gaps:
     finding: >
       <what is actually true about the telemetry>
     hypothesis_impact: >
-      <what the organisation cannot see because of this, and the confidence it costs>
+      <what the organization cannot see because of this, and the confidence it costs>
+    # Why is it missing? A host that never reported is an engineering problem.
+    # A host that reported until Tuesday is a hunt -- ATT&CK Defense Impairment
+    # (TA0112). `undetermined` is an acceptable answer and a backlog item;
+    # leaving this off is not.
+    cause: engineering          # engineering | adversary | undetermined
+    cause_evidence: >
+      <what you checked to decide: did coverage stop, or was it never there?>
     owner: "<team that can fix it>"
     ask: >
       <the specific change requested>

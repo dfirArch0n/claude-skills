@@ -29,7 +29,7 @@ Two rules keep the buckets honest.
 hunt stops being a hunt and becomes an incident. Hand it over; do not finish the
 hunt first.
 
-**B and C usually outnumber A**, and on a well-run programme that is the normal
+**B and C usually outnumber A**, and on a well-run program that is the normal
 result, not a disappointment. A hunt that surfaces an unmanaged RMM install, a
 service account with an eleven-year-old password, and a subnet no sensor covers
 has paid for itself without finding an adversary.
@@ -104,7 +104,7 @@ What this cannot see, and what must hold for it to work at all. Link the gap
 register entries from Stage 2.
 
 ## False Positives
-Known benign sources, how to recognise them, and which are already filtered.
+Known benign sources, how to recognize them, and which are already filtered.
 
 ## Validation
 Concrete steps to generate a true positive and confirm the detection fires.
@@ -135,7 +135,7 @@ Abridged, from the RMM hunt used throughout these references:
 > **Strategy Abstract.** Process creation events where the image is a known RMM
 > agent and the command line indicates installation, excluding parents belonging
 > to the deployment system. Enriched with asset owner from the CMDB. Hosts in the
-> IT support organisational unit are filtered, since RMM there is sanctioned.
+> IT support organizational unit are filtered, since RMM there is sanctioned.
 >
 > **Blind Spots and Assumptions.** Assumes command-line logging, which covers 61%
 > of servers (GAP-001). Detects by image name, so an RMM agent renamed before
@@ -150,7 +150,7 @@ Abridged, from the RMM hunt used throughout these references:
 > **Validation.** Install AnyDesk unattended on a lab host with a parent of
 > `cmd.exe`; confirm the alert fires within the detection window.
 >
-> **Priority.** Medium. High where the host is in a datacentre VLAN, since an RMM
+> **Priority.** Medium. High where the host is in a datacenter VLAN, since an RMM
 > agent there has no legitimate workflow.
 >
 > **Response.** Confirm whether a change record exists; identify the installing

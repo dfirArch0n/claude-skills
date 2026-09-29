@@ -52,7 +52,7 @@ def test_convert_writes_queries_and_exits_zero(rule, tmp_path, capsys):
 
 
 def test_convert_exits_zero_on_a_partial_result(rule, tmp_path, capsys):
-    # Deliberate: a partial result is the designed behaviour, not an error. One
+    # Deliberate: a partial result is the designed behavior, not an error. One
     # broken backend must not make a script treat three good queries as a failed
     # run. Only a run where nothing converted is an error.
     out = tmp_path / "generated"

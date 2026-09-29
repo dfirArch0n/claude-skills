@@ -1,6 +1,6 @@
 """Tests for hunt package scaffolding.
 
-A hunt package accumulates analysis that exists nowhere else, so the behaviour
+A hunt package accumulates analysis that exists nowhere else, so the behavior
 worth protecting here is mostly about *not destroying things*: never overwrite,
 never half-create, and never let real hunt output land in a public repository
 without saying so.

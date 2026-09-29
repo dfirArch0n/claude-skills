@@ -27,7 +27,7 @@ Detail: `pyramid-and-hypothesis.md`.
 
 - **Hypothesis-driven** — you have a supposition and test it. What this skill does.
 - **Baseline** (exploratory data analysis) — you have no hypothesis, so you
-  characterise normal and look at the edges. The right move when you know a data
+  characterize normal and look at the edges. The right move when you know a data
   source is rich and do not yet know what lives in it.
 - **Model-assisted (M-ATH)** — machine learning models normal or malicious
   behavior and flags departures.
@@ -42,15 +42,15 @@ the signal to run a baseline hunt instead of forcing a bad one.
 ## TaHiTI — Dutch financial sector, 2018
 
 **Ta**rgeted **Hi**nting integrating **T**hreat **I**ntelligence. Three phases —
-Initiate, Hunt, Finalise — across six steps, built around a **hunting backlog**
+Initiate, Hunt, Finalize — across six steps, built around a **hunting backlog**
 fed by triggers, where each trigger becomes an "investigation abstract" that
 waits its turn.
 
 TaHiTI's distinctive contribution is the backlog: hunts are queued and
-prioritised rather than run in the order intel arrives. This skill writes spawned
+prioritized rather than run in the order intel arrives. This skill writes spawned
 hypotheses to a backlog in Stage 4 for that reason.
 
-**Use it** when the problem is programme-level — too many triggers, no way to
+**Use it** when the problem is program-level — too many triggers, no way to
 choose. For a single hunt, PEAK's structure is lighter.
 
 ## Hunting Maturity Model — Sqrrl / Bianco
@@ -71,7 +71,7 @@ HMM1 asking for HMM3 hunts needs telemetry, not ambition — which is precisely
 what the Stage 2 gap register documents.
 
 **Use it** to explain to leadership why the answer to "hunt better" is a
-collection programme.
+collection program.
 
 ## MITRE ATT&CK
 
@@ -79,17 +79,38 @@ The shared vocabulary for behavior, and — more usefully for hunting — the
 telemetry each technique page names. Those turn "hunt for this technique" into
 "these are the events you need," which is the input to Stage 2.
 
-**As of v18 (October 2025)** a technique page carries **Detection Strategies**,
-which group **Analytics**, which cite **Log Sources** and **Data Components**.
-The older flat *Data Sources* listing is deprecated. Survey against Data
-Components: they are still the vendor-neutral unit, and they outlive whichever
-agent you happen to run.
+**Current release: v19, 28 April 2026.** A technique page carries **Detection
+Strategies**, which group **Analytics**, which cite **Log Sources** and **Data
+Components**. The older flat *Data Sources* listing is gone. Survey against Data
+Components: they are the vendor-neutral unit, and they outlive whichever agent
+you happen to run.
+
+Two v19 changes bite a hunt program specifically:
+
+**Defense Evasion split into Stealth (TA0005) and Defense Impairment (TA0112).**
+Stealth is hiding; Defense Impairment is breaking the defenses so you cannot see
+or trust what is happening. They are detected differently — Stealth by
+behavioral correlation across legitimate-looking events, Defense Impairment by
+watching for signals that *stopped*. That second idea is why the data survey now
+asks whether a gap is engineering or adversary; see `data-survey.md`.
+
+**Technique IDs were revoked, not just re-tagged.** T1562 Impair Defenses was
+merged into **T1685 Disable or Modify Tools**, and several of its sub-techniques
+were promoted to top-level IDs (T1686, T1688, T1689, T1690). Anything mapped to
+T1562 needs re-mapping. For this skill that matters because `metadata.yml`
+counts techniques across hunts: hunts recorded either side of the split are
+counting different taxonomies, so the coverage metric needs an `attack_version`
+to be interpretable at all.
 
 **Use it** for the technique ID in the charter, the data components in the
 survey, and Categorization in a detection candidate.
 
 **Do not** mistake technique coverage for security. A technique is "covered" at
 wildly different depths, and counting covered techniques rewards shallow rules.
+
+**Do not** pin this skill to a version. Name the structure, record which version
+a hunt used, and check the technique page rather than trusting a table written
+months ago. ATT&CK changed its detection model twice in the year to April 2026.
 
 ## ADS — Palantir
 

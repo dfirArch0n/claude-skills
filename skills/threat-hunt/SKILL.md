@@ -62,7 +62,7 @@ in the charter**.
 Then say plainly what you have. If the only rung reachable is hash, address or
 domain, this is an **IOC sweep** — still worth running, often urgent, but it buys
 days rather than years. Name it as a sweep in the charter and say what would be
-needed to climb. A sweep sold as a hunt is how a programme convinces itself it is
+needed to climb. A sweep sold as a hunt is how a program convinces itself it is
 maturing while it churns indicators.
 
 Worked climbs, including the ones that fail: `references/pyramid-and-hypothesis.md`.
@@ -107,6 +107,13 @@ Every failure becomes a **register** entry — the gap, the hypothesis it weaken
 the team that owns the fix, and the specific ask. Then the hunt **continues** on
 the evidence that does exist, with the reduced confidence written down. A gap is
 a finding, delivered whether or not the hunt finds anything else.
+
+**Ask why each gap exists.** A host that never reported is an engineering
+problem. A host that reported until Tuesday is a hunt — ATT&CK calls that tactic
+Defense Impairment (TA0112), and its whole detection approach is watching for
+signals that stopped. Record `cause` on every gap as engineering, adversary or
+undetermined, with what you checked. An unexamined absence is the one an
+adversary is most comfortable hiding in.
 
 **Done when** every Evidence item is marked available, partial or absent, and
 every partial and absent one has a register entry with an owner.
@@ -155,7 +162,7 @@ That note is what stops the next hunter re-litigating the choice.
 Per-platform pipelines, field-mapping traps, and the NG-SIEM specifics:
 `references/sigma-and-queries.md`.
 
-### Run, analyse, refine
+### Run, analyze, refine
 
 Hand the queries over, take the results back, and read them. Refinement loops
 back to Stage 1 when results show the hypothesis was wrong, and to Stage 2 when
@@ -228,7 +235,7 @@ hunts/YYYY-MM-DD-<slug>/
 ```
 
 Hunt packages hold real environment detail, so they belong in the human's own
-private hunt repository. This skill's repository keeps only sanitised examples
+private hunt repository. This skill's repository keeps only sanitized examples
 built from public reporting.
 
 ## References

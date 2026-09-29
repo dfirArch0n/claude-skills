@@ -29,7 +29,7 @@ evasion, not "a determined attacker could evade this". Link gap register IDs.>
 
 ## False Positives
 
-<Known benign sources with the counts the hunt produced, how to recognise each,
+<Known benign sources with the counts the hunt produced, how to recognize each,
 and which are already filtered.>
 
 ## Validation

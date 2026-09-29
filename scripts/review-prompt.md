@@ -24,7 +24,7 @@ Judge it on, in priority order:
 4. PUBLICATION SAFETY. This repository is public. Flag anything that identifies
    a real environment: hostnames, address ranges, usernames, index or table
    names, tenant IDs, tool inventories, or findings that read like real hunt
-   output rather than a sanitised example built from public reporting.
+   output rather than a sanitized example built from public reporting.
 5. Test coverage gaps -- failure modes claimed in comments or docs but not
    actually tested.
 6. Accuracy of docs/adr/ against what the code actually does, and accuracy of

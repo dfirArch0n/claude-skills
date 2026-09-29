@@ -42,7 +42,7 @@ shelf life. That sweep is recorded as a sweep, not as this hunt.
 - **Actor:** ransomware affiliates, unattributed
 - **Behavior:** installation of remote monitoring and management software for
   persistence (T1219, T1543.003)
-- **Location:** Windows servers in datacentre VLANs
+- **Location:** Windows servers in datacenter VLANs
 - **Evidence:** process creation with parent lineage and command line; service
   installation events; outbound connections to RMM cloud infrastructure
 
@@ -55,7 +55,7 @@ shelf life. That sweep is recorded as a sweep, not as this hunt.
   in the deployment chain, or to a host in the IT support OU.
 - **So-what:** a hit opens an incident. A miss still produces the sanctioned-RMM
   inventory question, which is a control gap either way.
-- **Bounded:** datacentre VLANs; 90-day lookback; three days of hunting; abort if
+- **Bounded:** datacenter VLANs; 90-day lookback; three days of hunting; abort if
   command-line telemetry proves absent across the whole scope.
 
 ## Stage 2 — Survey the data
@@ -68,12 +68,25 @@ shelf life. That sweep is recorded as a sweep, not as this hunt.
 | Sanctioned-RMM inventory | — | **No** | — | — | — | — | Absent → GAP-003 |
 
 **GAP-003 is the interesting one.** No security telemetry is missing; the
-organisation simply does not record which hosts are *supposed* to run
+organization simply does not record which hosts are *supposed* to run
 remote-access software. No query can separate sanctioned from unsanctioned. The
 hunt proceeds by ranking installs by rarity instead, and the register carries the
 real finding: an inventory nobody owns.
 
 That is a bucket C result delivered before a single query ran.
+
+### Why each gap exists
+
+| Gap | Coverage shape | Cause | What we checked |
+|---|---|---|---|
+| GAP-001 | Never — the 39% have no Sysmon events at any point in 90 days, and the set matches an OU the baseline GPO omits | engineering | Compared first-seen per host against the GPO's OU scope |
+| GAP-002 | Never — perimeter-only by design | engineering | Sensor placement is documented |
+| GAP-003 | N/A — no telemetry involved | engineering | There is no inventory to break |
+
+All three are engineering. Worth doing anyway: had any of those hosts *stopped*
+reporting rather than never started, the correct next step would have been a
+hunt for Defense Impairment (TA0112) rather than a ticket — and the shape of the
+coverage data is what tells them apart. See `references/data-survey.md`.
 
 ## Stage 3 — Execute
 
@@ -83,7 +96,7 @@ Filter over one log source, so Sigma carries it. The shipped canary rule
 (`skills/threat-hunt/assets/canary.sigma.yml`) is this rule.
 
 ```sh
-python skills/threat-hunt/scripts/convert.py queries/rmm-install.sigma.yml
+python3 $SKILL/scripts/convert.py queries/rmm-install.sigma.yml
 # -> rmm-install.spl, rmm-install.kql, rmm-install.esql, rmm-install.cql
 ```
 
@@ -114,7 +127,7 @@ DeviceProcessEvents
 | **D** | 6 | Atera on IT support workstations — sanctioned, ticketed, documented |
 
 Zero adversary findings. Five actionable results, two of which are live
-unmanaged remote-access paths into the datacentre.
+unmanaged remote-access paths into the datacenter.
 
 ## Stage 4 — Act
 
@@ -129,7 +142,7 @@ unmanaged remote-access paths into the datacentre.
 
 ### Detection candidate
 
-ADS-0001, summarised in `references/findings-and-detections.md`. Status: ready.
+ADS-0001, summarized in `references/findings-and-detections.md`. Status: ready.
 Its Blind Spots section names the exact evasion — a renamed RMM binary — and
 points at the follow-on hunt that would close it.
 
@@ -148,6 +161,7 @@ pyramid:
   classification: hunt
   shelf_life: years
 attack:
+  version: "v19"
   techniques: ["T1219", "T1543.003"]
 findings: {bucket_a: 0, bucket_b: 2, bucket_c: 3, bucket_d: 6, open: 0}
 gaps: ["GAP-001", "GAP-002", "GAP-003"]

@@ -12,9 +12,9 @@ costs an adversary seconds to change and an address costs them minutes.
 
 The failure mode this creates is not that indicator sweeps happen — they should,
 and during a live campaign they are urgent. It is that a sweep and a hunt produce
-identically-shaped reports, so a programme running nothing but sweeps cannot tell
+identically-shaped reports, so a program running nothing but sweeps cannot tell
 that from the outside, and neither can its leadership. Everyone is busy, the
-reports keep arriving, and the organisation's ability to detect the same
+reports keep arriving, and the organization's ability to detect the same
 adversary next quarter has not moved.
 
 Nothing in the workflow naturally surfaces this. The hunter knows which rung they
@@ -52,7 +52,7 @@ produced the rung is visible rather than asserted.
 
 ## Consequences
 
-- A programme can be asked a question it could not previously answer: what share
+- A program can be asked a question it could not previously answer: what share
   of our hunts reached rung 5 or 6, and is that share moving? `metadata.yml`
   across a hunt repository answers it by counting.
 - Every stalled climb produces a gap register entry naming the telemetry that
@@ -60,6 +60,6 @@ produced the rung is visible rather than asserted.
   argument.
 - Some hunts get recorded as sweeps, which reads as less impressive. That is the
   point of the field, and the honesty is what makes the trend line mean anything.
-- The rung is a judgement, and two hunters may rate the same hunt differently.
-  The climb table in the charter makes the judgement inspectable, which is enough
+- The rung is a judgment, and two hunters may rate the same hunt differently.
+  The climb table in the charter makes the judgment inspectable, which is enough
   — precision here would be false anyway.

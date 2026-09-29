@@ -6,6 +6,17 @@ Run before the first query. Answer each cell with a fact, not a belief.
 |---|---|---|---|---|---|---|---|
 | | | | | | | | available / partial / absent |
 
+## Why each gap exists
+
+For every partial or absent verdict above, say whether coverage **never existed**
+or **stopped**. Never existed is an engineering gap with an owner. Stopped is a
+hunt: ATT&CK Defense Impairment (TA0112) is detected precisely by signals going
+quiet. Carry the answer into `cause` in the gap register.
+
+| Gap | Coverage shape | Cause | What you checked |
+|---|---|---|---|
+| | never / stopped / thinned | engineering / adversary / undetermined | |
+
 ## Blind spots
 
 <What is known to be invisible in this Location: encrypted traffic, unmanaged

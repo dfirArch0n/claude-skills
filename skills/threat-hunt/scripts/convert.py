@@ -85,7 +85,7 @@ def main(argv: list[str] | None = None) -> int:
             file=sys.stderr,
         )
     # Exit non-zero only when nothing converted. A partial result is the
-    # designed behaviour, not an error: the hunt continues on what worked.
+    # designed behavior, not an error: the hunt continues on what worked.
     return 0 if succeeded else 1
 
 

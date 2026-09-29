@@ -24,7 +24,7 @@ skills/<name>/
   scripts/         standard-library Python and shell, no dependencies
   evals/           test prompts used to check the skill actually helps
 docs/adr/          why the skills are shaped the way they are
-examples/          sanitised worked examples built from public sources
+examples/          sanitized worked examples built from public sources
 tests/             pytest suite for the bundled scripts
 ```
 

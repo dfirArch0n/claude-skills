@@ -13,7 +13,7 @@ register, queries, findings, detection candidates, report. Every one of those
 files is, by design, specific about a real environment. The gap register names
 the teams that own broken telemetry and the share of servers missing an agent.
 The findings name hosts and accounts. The queries carry index names, table names
-and tenant identifiers. The charter names which threats the organisation
+and tenant identifiers. The charter names which threats the organization
 considers relevant.
 
 Taken together, a hunt package is a reconnaissance document written by the
@@ -50,7 +50,7 @@ advisories, vendor threat reporting, ATT&CK — and name the source they came fr
 - **A private repository instead.** Removes the risk entirely, and removes the
   reason for making it public: the skills are meant to be shown. The output, not
   the method, is what must stay private, and those separate cleanly.
-- **Sanitising real hunts for inclusion.** Sanitisation is a manual step under
+- **Sanitizing real hunts for inclusion.** Sanitization is a manual step under
   time pressure, performed by someone who already knows the environment and
   therefore cannot see what is identifying about it. It fails eventually, and it
   fails silently.
