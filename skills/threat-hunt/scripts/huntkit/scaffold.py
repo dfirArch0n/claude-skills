@@ -193,7 +193,11 @@ def _assemble(
                 encoding="utf-8",
             )
         staging.rename(package_dir)
-    except OSError as exc:
+    except Exception as exc:
+        # Deliberately broad. The promise is all-or-nothing, and a template with
+        # corrupt UTF-8 raises UnicodeDecodeError, not OSError -- catching only
+        # OSError left a half-rendered staging directory behind while still
+        # claiming the guarantee.
         shutil.rmtree(staging, ignore_errors=True)
         raise ScaffoldError(f"Could not create {package_dir}: {exc}") from exc
 

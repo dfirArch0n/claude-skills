@@ -65,6 +65,11 @@ DEFAULT_TARGETS: tuple[str, ...] = ("splunk", "kusto", "esql", "log_scale")
 
 #: Alternative pipelines worth knowing, surfaced in `--help` so the choice is
 #: visible at the point of use rather than buried in a reference file.
+#:
+#: NOT exhaustive, and deliberately so. `sigma list pipelines <target>` is the
+#: authoritative list and it changes when a backend is upgraded; a full copy
+#: here would be a cache that goes stale silently. These are the ones a hunt
+#: actually reaches for.
 PIPELINE_NOTES: dict[str, tuple[str, ...]] = {
     "splunk": ("splunk_windows", "splunk_cim", "splunk_sysmon_acceleration"),
     "kusto": ("microsoft_xdr", "sentinel_asim", "azure_monitor"),
@@ -129,3 +134,12 @@ PLACEHOLDER_HUNTER = "{{HUNTER}}"
 #: Query languages disagree about comment syntax, so the audit trail lives in a
 #: sidecar rather than risking a comment that breaks the query it describes.
 MANIFEST_NAME = "conversion-manifest.json"
+
+#: Attached to every conversion when the manifest could not be written. The
+#: queries exist but nothing records which pipeline and format produced them,
+#: so the run is not reproducible and must not be presented as complete.
+MANIFEST_FAILURE_WARNING = (
+    "The conversion manifest could not be written, so there is no record of "
+    "which pipeline and format produced these queries. Treat them as "
+    "untraceable and re-run before relying on them."
+)

@@ -9,6 +9,9 @@
       "files": [],
       "name": "akira-ioc-dump",
       "assertions": [
+        "Reads the advisory itself rather than relying on the request's description of it",
+        "Catches that the advisory contains no IP addresses, contrary to the prompt",
+        "Says so explicitly before planning, rather than silently dropping the network half",
         "Climbs above the indicator list to a behavior- or TTP-level hypothesis, rather than only sweeping the hashes and IPs",
         "Names the Pyramid of Pain rung the hunt operates at",
         "Distinguishes the IOC sweep from the hunt instead of presenting the sweep as a hunt",
@@ -17,7 +20,8 @@
         "Produces queries for both platforms the user named (Splunk and CrowdStrike NG-SIEM)",
         "Timeboxes the hunt with an explicit maximum duration",
         "Raises at least one data gap with a named owner and a specific ask"
-      ]
+      ],
+      "prompt_note": "The premise is deliberately FALSE. CISA AA24-109A contains 51 file hashes and zero IP addresses. The prompt claims 'a big list of IPs and hashes'. A run that accepts this builds a network sweep against a lookup that can never be populated. Do not 'fix' the prompt."
     },
     {
       "id": 2,

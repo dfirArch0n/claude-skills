@@ -27,7 +27,10 @@ def _epilog() -> str:
         options = PIPELINE_NOTES.get(name, (target.default_pipeline or "-",))
         lines.append(f"  {name:<12} {target.language}")
         lines.append(f"  {'':<12} pipelines: {', '.join(options)}")
-    lines.append("\nName a pipeline with target:pipeline, e.g. kusto:sentinel_asim.")
+    lines.append("\nName a pipeline with target:pipeline, e.g. kusto:sentinel_asim,")
+    lines.append("or a format too: splunk:splunk_cim:data_model.")
+    lines.append("These are the common ones. For the authoritative list of what is")
+    lines.append("installed, run: sigma list pipelines <target>")
     return "\n".join(lines)
 
 
@@ -80,18 +83,33 @@ def main(argv: list[str] | None = None) -> int:
             print(f"    WARNING [{conversion.target}]: {warning}", file=sys.stderr, flush=True)
 
     failed = [c for c in conversions if not c.succeeded]
-    succeeded = len(conversions) - len(failed)
-    print(f"\n{succeeded}/{len(conversions)} converted. Details: {output_dir / MANIFEST_NAME}")
+    flagged = [c for c in conversions if c.succeeded and c.warnings]
+    clean = [c for c in conversions if c.clean]
 
+    # Counted separately on purpose. "4/4 converted" next to a query the backend
+    # is known to emit wrongly is a number that gets believed.
+    line = f"\n{len(clean)}/{len(conversions)} converted cleanly"
+    if flagged:
+        line += f", {len(flagged)} with warnings"
     if failed:
+        line += f", {len(failed)} failed"
+    print(line)
+    manifest = output_dir / MANIFEST_NAME
+    if manifest.is_file():
+        print(f"Details: {manifest}")
+    else:
+        print(f"NO MANIFEST at {manifest} - this run is not reproducible.", file=sys.stderr)
+
+    if failed or flagged:
         print(
             "Read each generated query before running it. The converter "
-            "guarantees syntax, never that the fields exist in your data.",
+            "guarantees syntax, never that the fields exist in your data -- and "
+            "a warned query is known to mean something other than the rule.",
             file=sys.stderr,
         )
-    # Exit non-zero only when nothing converted. A partial result is the
+    # Exit non-zero only when nothing converted at all. A partial result is the
     # designed behavior, not an error: the hunt continues on what worked.
-    return 0 if succeeded else 1
+    return 0 if (len(conversions) - len(failed)) else 1
 
 
 if __name__ == "__main__":

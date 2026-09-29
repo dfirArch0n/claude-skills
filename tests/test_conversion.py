@@ -343,14 +343,16 @@ def test_a_single_target_keeps_the_simple_filename(rule, tmp_path):
     assert (out / "rmm-persistence.kql").exists()
 
 
-def test_a_failed_conversion_removes_stale_output(rule, tmp_path):
-    # The quietest of the failure modes. A conversion that worked yesterday and
-    # fails today leaves its old query on disk; the manifest says FAILED, the
-    # directory says otherwise, and the hunter runs logic that no longer matches
-    # the rule. Only the exact path this run would have written is touched.
+def test_a_failed_conversion_sets_stale_output_aside_without_destroying_it(rule, tmp_path):
+    # Two failures in tension, and the second is worse. A conversion that worked
+    # yesterday and fails today leaves its old query on disk: the manifest says
+    # FAILED, the directory says otherwise, and the hunter runs logic that no
+    # longer matches the rule. But deleting it destroys work -- this skill tells
+    # LogScale users to repair generated CQL BY HAND, so that file may be the
+    # only copy of someone's edits. It gets renamed, not removed.
     out = tmp_path / "generated"
     convert_rule(rule, ["splunk"], out, runner=ok("old query"), sigma_binary="sigma")
-    assert (out / "rmm-persistence.spl").exists()
+    (out / "rmm-persistence.spl").write_text("HAND-TUNED, hours of work\n")
 
     results = convert_rule(
         rule,
@@ -360,8 +362,70 @@ def test_a_failed_conversion_removes_stale_output(rule, tmp_path):
         sigma_binary="sigma",
     )
 
+    # The misleading current-looking file is gone from the expected path...
     assert not (out / "rmm-persistence.spl").exists()
-    assert "Removed stale" in results[0].error
+    # ...but the human's work still exists, and the error says where.
+    assert (out / "rmm-persistence.spl.stale").read_text() == "HAND-TUNED, hours of work\n"
+    assert "moved to rmm-persistence.spl.stale" in results[0].error
+
+
+def test_a_warned_conversion_is_not_reported_as_clean(rule, tmp_path):
+    # "4/4 converted" beside a query the backend is known to emit wrongly is a
+    # number that gets believed. A known-defective output converts, but it is
+    # not a clean success and must not be counted as one.
+    out = tmp_path / "generated"
+    results = convert_rule(
+        rule,
+        ["log_scale"],
+        out,
+        runner=ok("event_platform=/Win/i a=/x/i or b=/y/i"),
+        sigma_binary="sigma",
+    )
+    assert results[0].succeeded is True
+    assert results[0].clean is False
+    assert results[0].summary.startswith("[WARN]")
+
+
+def test_an_undefective_conversion_is_clean(rule, tmp_path):
+    # The companion: output with no known defect must still read as a plain
+    # success, or the WARN label stops meaning anything.
+    results = convert_rule(
+        rule, ["splunk"], tmp_path / "g", runner=ok("search foo"), sigma_binary="sigma"
+    )
+    assert results[0].clean is True
+    assert results[0].summary.startswith("[ok]")
+
+
+def test_a_lost_manifest_is_attached_to_every_conversion(rule, tmp_path):
+    # Queries on disk with no record of the pipeline and format that produced
+    # them are not reproducible. Previously the run still printed a Details path
+    # that did not exist and reported complete success.
+    out = tmp_path / "generated"
+    out.mkdir(parents=True)
+    (out / MANIFEST_NAME).mkdir()  # a directory where the file should go
+
+    results = convert_rule(rule, ["splunk"], out, runner=ok("search foo"), sigma_binary="sigma")
+
+    assert results[0].succeeded is True
+    assert results[0].clean is False
+    assert any("not reproducible" in w or "untraceable" in w for w in results[0].warnings)
+
+
+def test_same_pipeline_different_formats_get_separate_files(rule, tmp_path):
+    # splunk_cim as a data_model query and as savedsearches.conf are different
+    # artifacts. Disambiguating on pipeline alone collided them, and the second
+    # silently replaced the first while the manifest claimed two outputs.
+    out = tmp_path / "generated"
+    results = convert_rule(
+        rule,
+        ["splunk:splunk_cim:data_model", "splunk:splunk_cim:savedsearches"],
+        out,
+        runner=ok("| tstats count"),
+        sigma_binary="sigma",
+    )
+    paths = {r.output_path for r in results}
+    assert len(paths) == 2, f"outputs collided: {paths}"
+    assert all(p is not None for p in paths)
 
 
 # --- disk failures are recorded, never raised -------------------------------

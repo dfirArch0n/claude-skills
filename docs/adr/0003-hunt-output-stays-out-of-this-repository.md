@@ -54,6 +54,10 @@ advisories, vendor threat reporting, ATT&CK — and name the source they came fr
   time pressure, performed by someone who already knows the environment and
   therefore cannot see what is identifying about it. It fails eventually, and it
   fails silently.
+- **Warning instead of refusing.** The original design warned after the files
+  were written. A warning issued after the fact is an observation, not a
+  control, and the evaluation runs walked straight past it. `create_hunt` now
+  refuses unless `allow_in_skills_repo` is passed deliberately.
 - **Relying on the model to be careful.** The skill runs unattended, in a
   directory the user chose, at the end of a long session. A `.gitignore` entry
   does not get tired.

@@ -102,9 +102,14 @@ Impairment (TA0112)**, defined as:
 > "The adversary is trying to break security mechanisms, pipelines, and tooling
 > so defenders can't see or trust what's happening."
 
-Detecting that tactic means watching for the **absence of expected signals** and
-validating control integrity. Which is to say: the thing this stage produces —
-a list of places you cannot see — is also the raw material for a hunt.
+Much of TA0112 is detected by ordinary positive activity — a firewall rule
+changed, a policy modified, a safe-mode boot, a downgrade attack. What is
+distinctive is that it *also* leaves a shape no other tactic leaves: the
+**absence of expected signals**, plus control integrity that no longer holds.
+
+That second detection surface is the one this stage happens to produce. A list of
+places you cannot see is a Stage 2 deliverable and a hunting lead at the same
+time.
 
 **The survey already computes what tells the two apart.** Coverage is a
 measurement over time, so look at its shape:

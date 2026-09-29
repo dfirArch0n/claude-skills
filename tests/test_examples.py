@@ -98,3 +98,57 @@ def test_the_survey_template_classifies_coverage_shape():
     survey = (TEMPLATES / "01-data-survey.md").read_text()
     assert "Why each gap exists" in survey
     assert "TA0112" in survey
+
+
+# --- ADR 0006: the controls that stop the skill manufacturing confidence ----
+#
+# All three came from the evaluation, where the skill produced confident
+# statements nothing had verified. The fix is instruction rather than code --
+# no parser distinguishes a fluent sentence that overstates the register from
+# one that does not -- so what is testable is that the instruction still ships.
+
+
+def test_the_charter_records_a_source_check():
+    # The worst eval finding: given a prompt claiming an advisory contained IP
+    # addresses when it contained none, the skill accepted the premise and built
+    # a sweep against a lookup that could never be populated. Everything
+    # downstream inherits the trigger, so an unchecked premise aims the whole
+    # hunt at the wrong thing.
+    charter = (TEMPLATES / "00-charter.md").read_text()
+    assert "Source check" in charter
+    assert "Source read directly?" in charter
+    assert "Where it contradicts the request" in charter
+    # An unreachable source must record what it COSTS, not merely that it
+    # happened. "Unverified" on its own is a label; the value is knowing which
+    # conclusions fall over if the assumption is wrong.
+    assert "what it costs" in charter
+
+
+def test_the_skill_requires_sourcing_for_external_claims():
+    # The skill arm asserted dated vendor specifics with no citations while the
+    # baseline cited twelve primary sources. Recalled facts about telemetry age
+    # badly and read identically to checked ones on the page.
+    skill = (REPO / "skills/threat-hunt/SKILL.md").read_text()
+    assert "Cite what you assert about the outside world" in skill
+    assert "unverified" in skill
+
+
+def test_the_report_may_not_outrun_the_gap_register():
+    # One eval run's report said "Confirmed already: ..." for two items its own
+    # gap register marked as placeholders. A report that asserts what the
+    # register marks unverified manufactures the false confidence the whole
+    # method exists to remove.
+    report = (TEMPLATES / "05-report.md").read_text()
+    assert "[FILL" in report
+    assert "never as" in report and "confirmed" in report
+    # Gap provenance: measured, reported, or assumed.
+    assert "Established how" in report
+
+
+def test_the_trigger_check_has_a_worked_example():
+    # An instruction with no worked example gets read and not applied. This one
+    # uses the real failure, from a public advisory, so the example carries its
+    # own provenance.
+    ref = (REPO / "skills/threat-hunt/references/pyramid-and-hypothesis.md").read_text()
+    assert "Worked trigger check" in ref
+    assert "AA24-109A" in ref
