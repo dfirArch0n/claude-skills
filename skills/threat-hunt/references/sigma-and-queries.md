@@ -274,6 +274,37 @@ unreleased as of 3.0.0 (2025-11-30), which is still the newest on PyPI. When a
 release carries it, drop `BACKEND_WARNINGS["log_scale"]` from
 `scripts/huntkit/config.py` and confirm the canary converts parenthesized.
 
+## Splunk emits the same shape — and whether that is a bug is UNVERIFIED
+
+A rule meaning `(image OR parent) AND commandline` converts to Splunk as:
+
+```
+Image="*\\a.exe" OR ParentImage="*\\c.exe" CommandLine="*--install*"
+```
+
+The OR group is not parenthesized, exactly as in the LogScale output above.
+Whether that is wrong depends on SPL's precedence, and **this is not verified**:
+
+- If SPL evaluates `OR` before the implicit `AND`, the query means
+  `(Image OR ParentImage) AND CommandLine` — correct, nothing to do.
+- If SPL binds the implicit `AND` tighter, as LogScale does, the query means
+  `Image OR (ParentImage AND CommandLine)` — wrong in the same way, on the
+  platform most of these hunts run against.
+
+Splunk's own documentation returned HTTP 403 to every attempt, and no
+second-hand source is good enough for a claim this load-bearing. So there is
+**no warning for `splunk` in `BACKEND_WARNINGS`** — a warning that might be
+crying wolf teaches hunters to dismiss the one that is not.
+
+**The one-minute test, in your own Splunk.** Index two events: one where only
+`ParentImage` and `CommandLine` match, one where only `Image` matches. Run the
+unparenthesized query. If both return, `OR` binds tighter and the output is
+fine. If only the first returns, the output is wrong and every converted Splunk
+rule with an OR group needs hand-parenthesizing. Please record the answer here.
+
+Until then: parenthesize OR groups in Splunk output by hand. It is correct under
+either precedence, and it costs one edit.
+
 ## Conversion gotchas
 
 - **`log_scale` emits regex**, so `.` and `\` must be escaped and matching is

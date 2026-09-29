@@ -503,6 +503,10 @@ def test_an_error_marker_with_the_message_on_the_next_line():
         ("(a=1 or b=2) c=3", False),
         ("(a=1 or b=2) c=3 or d=4", True),
         ("a=1 (b=2 or c=3) not (d=4 or e=5)", False),
+        # Case matters: LogScale emits lowercase `or`, Splunk uppercase `OR`.
+        # A case-sensitive check silently passes anything that shouts.
+        ("a=1 b=2 OR c=3", True),
+        ('Image IN ("a") OR Parent IN ("b") CommandLine="c"', True),
     ],
 )
 def test_bare_or_detection(query, expected):
