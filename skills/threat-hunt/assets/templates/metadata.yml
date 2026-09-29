@@ -1,0 +1,41 @@
+# Machine-readable hunt record. Across many hunts, these files are the
+# coverage metric: which techniques, at which rung, finding what.
+hunt: "{{SLUG}}"
+opened: "{{DATE}}"
+closed: null
+hunter: "{{HUNTER}}"
+status: open                  # open | aborted | complete
+
+trigger:
+  type: null                  # threat_report | attack_gap | incident_lesson | anomaly | hunch | exec_question
+  source: null
+
+pyramid:
+  rung: null                  # 1-6
+  classification: null        # hunt | ioc_sweep
+  shelf_life: null            # hours | days | weeks | months | years
+
+attack:
+  # Record the version. IDs are revoked and re-issued between releases -- v19
+  # merged T1562 into T1685 and split Defense Evasion into Stealth (TA0005) and
+  # Defense Impairment (TA0112) -- so counting techniques across hunts without
+  # this field counts two different taxonomies.
+  version: "v19"
+  tactics: []                 # e.g. ["TA0005", "TA0112"]
+  techniques: []              # e.g. ["T1543.003", "T1219"]
+
+scope:
+  location: null
+  window_days: null
+  clock_days: null
+
+findings:
+  bucket_a: 0
+  bucket_b: 0
+  bucket_c: 0
+  bucket_d: 0
+  open: 0
+
+gaps: []                      # e.g. ["GAP-001", "GAP-003"]
+detections: []                # e.g. ["ADS-0001"]
+platforms: []                 # e.g. ["splunk", "kusto", "log_scale"]

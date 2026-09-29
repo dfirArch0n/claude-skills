@@ -1,0 +1,23 @@
+# Data gap register. Every partial or absent Evidence item gets an entry.
+# A gap with no owner and no ask is a complaint, not a finding.
+gaps:
+  - id: GAP-001
+    evidence: "<the evidence item that is missing or degraded>"
+    attack_data_component: "<e.g. Process: Process Creation>"
+    status: partial            # partial | absent
+    finding: >
+      <what is actually true about the telemetry>
+    hypothesis_impact: >
+      <what the organization cannot see because of this, and the confidence it costs>
+    # Why is it missing? A host that never reported is an engineering problem.
+    # A host that reported until Tuesday is a hunt -- ATT&CK Defense Impairment
+    # (TA0112). `undetermined` is an acceptable answer and a backlog item;
+    # leaving this off is not.
+    cause: engineering          # engineering | adversary | undetermined
+    cause_evidence: >
+      <what you checked to decide: did coverage stop, or was it never there?>
+    owner: "<team that can fix it>"
+    ask: >
+      <the specific change requested>
+    raised: "{{DATE}}"
+    hunt: "{{SLUG}}"
