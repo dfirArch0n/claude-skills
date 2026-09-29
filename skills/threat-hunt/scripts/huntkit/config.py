@@ -84,6 +84,29 @@ PIPELINE_FORMATS: dict[str, str] = {
     "splunk_cim": "data_model",
 }
 
+#: Known defects in a backend's generated output, surfaced on every conversion.
+#:
+#: log_scale: pySigma-backend-crowdstrike declares its operator precedence as
+#: (NOT, OR, AND) while emitting AND as juxtaposition, which in LogScale binds
+#: TIGHTER than an explicit `or`. Parentheses around an OR group nested inside an
+#: AND are therefore omitted, and the AND-ed conjuncts apply only to the first
+#: disjunct -- every later disjunct matches unscoped. The query converts, runs,
+#: and matches far more than the rule says.
+#:
+#: Upstream fix merged 2026-09-20 (SigmaHQ/pySigma-backend-crowdstrike#25) but
+#: unreleased: 3.0.0, from 2025-11-30, is still the newest on PyPI. Remove this
+#: warning once a release carries the fix and the canary converts parenthesized.
+BACKEND_WARNINGS: dict[str, str] = {
+    "log_scale": (
+        "OR groups are emitted WITHOUT parentheses by "
+        "pysigma-backend-crowdstrike<=3.0.0, and LogScale binds AND tighter than "
+        "or, so the conditions before the first `or` do not apply to the later "
+        "disjuncts. This query matches MORE than the rule states. Parenthesize "
+        "each OR group by hand before running it. Upstream fix merged "
+        "2026-09-20, not yet released."
+    ),
+}
+
 #: Files copied into a new hunt package, in the order a hunt fills them.
 TEMPLATE_FILES: tuple[str, ...] = (
     "00-charter.md",

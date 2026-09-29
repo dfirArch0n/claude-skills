@@ -231,6 +231,49 @@ from a document handler is unremarkable alone and damning together.
 what is only in this week. Finds newly-introduced behavior without knowing what
 it will be, which is how a hunt finds things nobody wrote a rule for.
 
+## The LogScale OR-precedence defect — read before running any CQL
+
+**Every NG-SIEM query this toolchain generates from a rule containing an OR
+group currently matches more than the rule says.** Not a style issue; a
+correctness one.
+
+`pySigma-backend-crowdstrike` declares its operator precedence as
+`(NOT, OR, AND)` while emitting AND as juxtaposition — and LogScale binds
+juxtaposition **tighter** than an explicit `or`. So the parentheses around an OR
+group nested inside an AND are dropped, and the AND-ed conditions apply only to
+the first disjunct. Every later disjunct matches unscoped.
+
+What comes out of the canary rule:
+
+```
+event_platform=/^Win$/i #event_simpleName=/^ProcessRollup2$/i or #event_simpleName=/^SyntheticProcessRollup2$/i
+ImageFileName=/\\AnyDesk\.exe$/i or ImageFileName=/\\ScreenConnect\.ClientService\.exe$/i ...
+```
+
+Read with LogScale's precedence, `event_platform` and `CommandLine` constrain
+only the *first* `#event_simpleName` and the *first* `ImageFileName`. Everything
+after each `or` is a bare, unscoped match. On a busy estate that is a query
+returning thousands of irrelevant rows, which reads as a noisy detection rather
+than a broken one.
+
+**Until a fixed release ships, parenthesize each OR group by hand:**
+
+```
+event_platform=/^Win$/i (#event_simpleName=/^ProcessRollup2$/i or #event_simpleName=/^SyntheticProcessRollup2$/i)
+(ImageFileName=/\\AnyDesk\.exe$/i or ImageFileName=/\\ScreenConnect\.ClientService\.exe$/i or ImageFileName=/\\AteraAgent\.exe$/i)
+CommandLine=/--install/i not (ParentBaseFileName=/^ccmexec\.exe$/i or ParentBaseFileName=/^msiexec\.exe$/i)
+```
+
+`convert.py` detects a bare `or` in LogScale output and prints a warning on
+every run, and records it in `conversion-manifest.json`. Negated groups are
+already parenthesized by the converter, so the check does not cry wolf.
+
+Upstream fix merged **2026-09-20** in
+[SigmaHQ/pySigma-backend-crowdstrike#25](https://github.com/SigmaHQ/pySigma-backend-crowdstrike/pull/25);
+unreleased as of 3.0.0 (2025-11-30), which is still the newest on PyPI. When a
+release carries it, drop `BACKEND_WARNINGS["log_scale"]` from
+`scripts/huntkit/config.py` and confirm the canary converts parenthesized.
+
 ## Conversion gotchas
 
 - **`log_scale` emits regex**, so `.` and `\` must be escaped and matching is

@@ -73,6 +73,11 @@ def main(argv: list[str] | None = None) -> int:
     for conversion in conversions:
         stream = sys.stdout if conversion.succeeded else sys.stderr
         print(conversion.summary, file=stream, flush=True)
+        # A converted query that runs and means something other than the rule is
+        # the worst thing this tool can hand a hunter, so known-bad emissions are
+        # shouted on every run rather than documented once.
+        for warning in conversion.warnings:
+            print(f"    WARNING [{conversion.target}]: {warning}", file=sys.stderr, flush=True)
 
     failed = [c for c in conversions if not c.succeeded]
     succeeded = len(conversions) - len(failed)

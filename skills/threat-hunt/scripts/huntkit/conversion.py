@@ -22,6 +22,7 @@ temporary shell script. Same pattern as `ContextProvider` in security-tooling-de
 from __future__ import annotations
 
 import json
+import re
 import shlex
 import shutil
 import subprocess
@@ -33,6 +34,7 @@ from pathlib import Path
 from typing import Protocol
 
 from huntkit.config import (
+    BACKEND_WARNINGS,
     MANIFEST_NAME,
     PIPELINE_FORMATS,
     SIGMA_BINARY,
@@ -103,6 +105,38 @@ def first_error_line(error: str) -> str:
     return lines[-1]
 
 
+def has_bare_or(query: str) -> bool:
+    """Is there an `or` outside every parenthesized group?
+
+    A bare `or` is the shape that trips LogScale's precedence: the conjuncts
+    before it bind only to the first disjunct. An `or` safely inside parentheses
+    -- which is what the converter does emit for negated groups -- is fine.
+    """
+    depth = 0
+    outside = []
+    for char in query:
+        if char == "(":
+            depth += 1
+        elif char == ")":
+            depth = max(0, depth - 1)
+        elif depth == 0:
+            outside.append(char)
+    return re.search(r"\bor\b", "".join(outside)) is not None
+
+
+def output_warnings(target: str, query: str) -> tuple[str, ...]:
+    """Known defects in this backend's output, for a query it just produced.
+
+    A converted query that runs and means something other than the rule is the
+    worst outcome this toolchain can produce, so a known-bad emission is
+    reported every single time rather than documented once and forgotten.
+    """
+    warning = BACKEND_WARNINGS.get(target)
+    if warning and has_bare_or(query):
+        return (warning,)
+    return ()
+
+
 @dataclass(frozen=True)
 class Conversion:
     """The outcome of converting one rule for one target."""
@@ -116,6 +150,7 @@ class Conversion:
     query: str
     error: str
     output_path: str | None
+    warnings: tuple[str, ...] = ()
 
     @property
     def summary(self) -> str:
@@ -281,6 +316,7 @@ def convert_one(
         query=query,
         error="",
         output_path=None,
+        warnings=output_warnings(target.identifier, query),
     )
 
 

@@ -19,6 +19,8 @@ from huntkit.conversion import (
     build_command,
     convert_rule,
     first_error_line,
+    has_bare_or,
+    output_warnings,
     parse_target_spec,
     resolve_sigma_binary,
 )
@@ -413,3 +415,72 @@ def test_an_error_marker_with_the_message_on_the_next_line():
     assert first_error_line("Usage: sigma\nError:\nThe pipeline was not found.") == (
         "The pipeline was not found."
     )
+
+
+# --- known-bad backend output ----------------------------------------------
+#
+# Found by three independent eval runs and confirmed upstream:
+# pySigma-backend-crowdstrike declares precedence (NOT, OR, AND) but emits AND
+# as juxtaposition, which LogScale binds tighter than an explicit `or`. The
+# parentheses around a nested OR group are dropped, so the AND-ed conjuncts
+# apply only to the first disjunct and every later one matches unscoped. The
+# query converts, runs, and matches far more than the rule states -- the exact
+# silent-wrong-answer failure this toolchain exists to prevent.
+#
+# Fix merged upstream 2026-09-20; unreleased as of 3.0.0 (2025-11-30).
+
+
+@pytest.mark.parametrize(
+    ("query", "expected"),
+    [
+        ("a=1 b=2 or c=3", True),
+        ("a=1 not (b=2 or c=3)", False),
+        ("a=1 b=2", False),
+        ("(a=1 or b=2) c=3", False),
+        ("(a=1 or b=2) c=3 or d=4", True),
+        ("a=1 (b=2 or c=3) not (d=4 or e=5)", False),
+    ],
+)
+def test_bare_or_detection(query, expected):
+    # Distinguishes an `or` the backend left unscoped from one safely inside
+    # parentheses. The converter does parenthesize negated groups, so warning on
+    # every `or` would cry wolf on correct output and get ignored.
+    assert has_bare_or(query) is expected
+
+
+def test_log_scale_output_with_a_bare_or_is_flagged():
+    # The warning that matters. Without it a hunter runs an over-matching query
+    # and reads the extra hits as a noisy detection rather than a broken one.
+    warnings = output_warnings("log_scale", "event_platform=/Win/i a=/x/i or b=/y/i")
+    assert warnings
+    assert "matches MORE than the rule states" in warnings[0]
+
+
+def test_log_scale_output_without_a_bare_or_is_not_flagged():
+    # The defect only manifests where an OR group is nested in an AND. A rule
+    # with no disjunction converts correctly and should pass quietly.
+    assert output_warnings("log_scale", "event_platform=/Win/i ImageFileName=/x/i") == ()
+
+
+def test_other_backends_are_not_flagged():
+    # Splunk, Kusto and Elastic parenthesize correctly. Warning on them would
+    # train the hunter to skip the warning that is real.
+    assert output_warnings("splunk", 'a="1" OR b="2"') == ()
+    assert output_warnings("kusto", "a == 1 or b == 2") == ()
+
+
+def test_the_warning_reaches_the_conversion_and_the_manifest(rule, tmp_path):
+    # End to end: the warning has to survive into the Conversion object and the
+    # manifest, because that sidecar is what a hunter reads weeks later when
+    # deciding whether a saved query is trustworthy.
+    out = tmp_path / "generated"
+    results = convert_rule(
+        rule,
+        ["log_scale"],
+        out,
+        runner=ok("event_platform=/Win/i a=/x/i or b=/y/i"),
+        sigma_binary="sigma",
+    )
+    assert results[0].warnings
+    manifest = json.loads((out / MANIFEST_NAME).read_text())
+    assert manifest["conversions"][0]["warnings"]

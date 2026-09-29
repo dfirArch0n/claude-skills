@@ -72,6 +72,16 @@ rather than by importing a module.
   `--disable-pipeline-check` for those two targets and records that it did. If
   the backend later registers the pipelines, the override becomes harmless
   rather than wrong.
+- **A backend can emit a query that means something else.** The LogScale
+  backend drops parentheses around OR groups nested in AND, and LogScale binds
+  juxtaposition tighter than `or`, so the AND-ed conditions scope only the first
+  disjunct. Converted queries run, look right, and match far more than the rule
+  states. Found by three independent evaluation runs, confirmed against the
+  upstream fix (merged 2026-09-20, unreleased). `convert.py` now carries a
+  `BACKEND_WARNINGS` table and shouts on every affected conversion, because a
+  defect documented once in a reference file is a defect nobody sees at 2am.
+  This is the strongest argument for the `--check` canary and for reading
+  generated output rather than trusting it.
 - **A pipeline can require an output format to mean anything.** `splunk_cim`
   maps fields onto the CIM data model, and without `-f data_model` sigma-cli
   emits a bare filter over `Processes.*` attributes: it converts, reports

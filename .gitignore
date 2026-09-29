@@ -30,3 +30,8 @@ __pycache__/
 .vscode/*
 !.vscode/settings.json
 !.vscode/extensions.json
+
+# Skill evaluation runs: generated transcripts, outputs and benchmarks. Kept on
+# disk so iteration N can be compared against N-1, kept out of git because they
+# are large, regenerable, and not part of the skill.
+/threat-hunt-workspace/
