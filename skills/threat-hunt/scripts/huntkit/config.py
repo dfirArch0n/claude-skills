@@ -32,10 +32,11 @@ class Target:
             pipeline maps Sigma's generic field names onto a platform's real
             schema; converting without the right one yields a query that runs
             and matches nothing.
-        override_pipeline_check: Pass `--disable-pipeline-check`. Needed only
-            for `esql`, where the ECS pipelines produce correct field mappings
-            but do not register themselves against the target, so sigma-cli
-            refuses a combination that in fact works. See ADR 0002.
+        override_pipeline_check: Pass `--disable-pipeline-check`. Needed for
+            `esql` and `elastalert`, where the ECS pipelines produce correct
+            field mappings but never registered themselves against the target,
+            so sigma-cli refuses a combination that in fact works. Verified by
+            converting the canary rule both ways. See ADR 0002.
     """
 
     identifier: str
@@ -52,7 +53,7 @@ TARGETS: dict[str, Target] = {
     "lucene": Target("lucene", "lucene", "Elasticsearch Lucene", "ecs_windows"),
     "esql": Target("esql", "esql", "Elasticsearch ES|QL", "ecs_windows", True),
     "eql": Target("eql", "eql", "Elasticsearch EQL", "ecs_windows"),
-    "elastalert": Target("elastalert", "yml", "Elastalert", "ecs_windows"),
+    "elastalert": Target("elastalert", "yml", "Elastalert", "ecs_windows", True),
     "log_scale": Target(
         "log_scale", "cql", "CrowdStrike NG-SIEM (LogScale CQL)", "crowdstrike_falcon"
     ),
@@ -71,6 +72,16 @@ PIPELINE_NOTES: dict[str, tuple[str, ...]] = {
     "esql": ("ecs_windows",),
     "eql": ("ecs_windows", "ecs_zeek_beats", "ecs_macos_esf", "ecs_kubernetes"),
     "log_scale": ("crowdstrike_falcon", "crowdstrike_fdr"),
+}
+
+#: Pipelines that only produce a usable query when paired with an output format.
+#:
+#: `splunk_cim` maps fields onto the CIM data model. Without `-f data_model`,
+#: sigma-cli emits a bare filter over `Processes.*` attributes -- syntactically
+#: fine, reports success, and resolves to nothing in an ordinary search. It has
+#: to be a tstats query against the data model or it is not a CIM query at all.
+PIPELINE_FORMATS: dict[str, str] = {
+    "splunk_cim": "data_model",
 }
 
 #: Files copied into a new hunt package, in the order a hunt fills them.

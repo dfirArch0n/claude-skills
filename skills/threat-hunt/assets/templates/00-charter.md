@@ -22,7 +22,7 @@
 
 - **Rung hunted at:** <1–6>
 - **This is a:** hunt | **IOC sweep**
-- **Shelf life:** <hours / days / weeks / months / years>
+- **Shelf life (your estimate, not a measurement):** <hours / days / weeks / months / years>
 - **To climb higher we would need:** <telemetry or knowledge that is missing>
 
 ## Hypothesis (ABLE)

@@ -65,9 +65,16 @@ rather than by importing a module.
   in it, which reads like a broken package rather than a missing tool. Installing
   backends as `--with` dependencies avoids it; the setup script encodes this so
   it is discovered once rather than every time.
-- **ES|QL has no registered ECS pipeline.** The `ecs_*` pipelines declare support
-  for `elasticsearch`, `eql`, `lucene` and `opensearch`, omitting `esql`, so
-  `sigma convert -t esql -p ecs_windows` is rejected although the mapping is
-  correct. The conversion script passes `--disable-pipeline-check` for `esql`
-  and records that it did. If the backend later registers the pipelines, the
-  override becomes harmless rather than wrong.
+- **ES|QL and Elastalert have no registered ECS pipeline.** The `ecs_*`
+  pipelines declare support for `elasticsearch`, `eql`, `lucene` and
+  `opensearch`, omitting both, so `sigma convert -t esql -p ecs_windows` is
+  rejected although the mapping is correct. The conversion script passes
+  `--disable-pipeline-check` for those two targets and records that it did. If
+  the backend later registers the pipelines, the override becomes harmless
+  rather than wrong.
+- **A pipeline can require an output format to mean anything.** `splunk_cim`
+  maps fields onto the CIM data model, and without `-f data_model` sigma-cli
+  emits a bare filter over `Processes.*` attributes: it converts, reports
+  success, and matches nothing when run. Because that failure is silent and
+  looks like a clean hunt result, the format is derived from the pipeline in
+  `PIPELINE_FORMATS` rather than left to the caller to remember.

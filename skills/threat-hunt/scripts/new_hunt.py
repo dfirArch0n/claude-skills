@@ -28,6 +28,12 @@ def main(argv: list[str] | None = None) -> int:
         "your private hunt repository, not in the public skills repository.",
     )
     parser.add_argument("--hunter", default="", help="Name recorded in the charter.")
+    parser.add_argument(
+        "--allow-in-skills-repo",
+        action="store_true",
+        help="Permit creation inside the public skills repository. For testing "
+        "the scaffolding only; real hunt output belongs elsewhere (ADR 0003).",
+    )
     args = parser.parse_args(argv)
 
     try:
@@ -36,6 +42,7 @@ def main(argv: list[str] | None = None) -> int:
             hunts_root=Path(args.hunts_root).expanduser(),
             templates_dir=SKILL_DIR / "assets" / "templates",
             hunter=args.hunter or "<hunter>",
+            allow_in_skills_repo=args.allow_in_skills_repo,
         )
     except ScaffoldError as exc:
         print(f"Could not create the hunt package: {exc}", file=sys.stderr)

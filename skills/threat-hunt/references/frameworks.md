@@ -76,9 +76,14 @@ collection programme.
 ## MITRE ATT&CK
 
 The shared vocabulary for behavior, and — more usefully for hunting — the
-**data sources and data components** listed on each technique page. Those turn
-"hunt for this technique" into "these are the events you need," which is the
-input to Stage 2.
+telemetry each technique page names. Those turn "hunt for this technique" into
+"these are the events you need," which is the input to Stage 2.
+
+**As of v18 (October 2025)** a technique page carries **Detection Strategies**,
+which group **Analytics**, which cite **Log Sources** and **Data Components**.
+The older flat *Data Sources* listing is deprecated. Survey against Data
+Components: they are still the vendor-neutral unit, and they outlive whichever
+agent you happen to run.
 
 **Use it** for the technique ID in the charter, the data components in the
 survey, and Categorization in a detection candidate.

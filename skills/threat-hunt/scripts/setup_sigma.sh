@@ -36,9 +36,10 @@ CHECKS=(
   "log_scale:crowdstrike_falcon"
 )
 
-# esql needs --disable-pipeline-check: the ECS pipelines map its fields
-# correctly but do not register themselves against the target.
-OVERRIDE_TARGET="esql"
+# Targets needing --disable-pipeline-check: the ECS pipelines map their fields
+# correctly but never registered themselves against these targets. Kept in sync
+# with TARGETS in huntkit/config.py, where the same fact drives convert.py.
+OVERRIDE_TARGETS=" esql elastalert "
 
 find_sigma() {
   if command -v sigma >/dev/null 2>&1; then
@@ -89,8 +90,13 @@ check_backends() {
 
   echo "Using $sigma"
   echo "Linting the canary rule..."
-  if ! "$sigma" check "$CANARY" >/dev/null 2>&1; then
-    echo "  FAILED - the canary rule does not lint. pySigma may have changed." >&2
+  local lint_output
+  # Capture rather than discard. A non-zero exit here is usually NOT a bad rule
+  # -- a corrupt plugin cache reports the same way -- so swallowing stderr sends
+  # the reader off to fix the wrong thing.
+  if ! lint_output="$("$sigma" check "$CANARY" 2>&1)"; then
+    echo "  FAILED - sigma check exited non-zero. Its output was:" >&2
+    printf '%s\n' "$lint_output" | sed 's/^/      /' >&2
     exit 1
   fi
   echo "  ok"
@@ -101,19 +107,24 @@ check_backends() {
     local target="${check%%:*}"
     local pipeline="${check##*:}"
     local extra=()
-    [ "$target" = "$OVERRIDE_TARGET" ] && extra+=(--disable-pipeline-check)
+    case "$OVERRIDE_TARGETS" in *" $target "*) extra+=(--disable-pipeline-check) ;; esac
 
     printf '%-12s ' "$target"
-    local output
+    local output err_file
+    err_file="$(mktemp)"
     # A backend that fails must not stop the ones after it: the point of the
-    # check is a complete picture of what works.
+    # check is a complete picture of what works. Its stderr is kept and shown,
+    # because "FAILED" with no reason is barely better than silence.
     # "${extra[@]+...}" guards the expansion: under `set -u`, bash 3.2 (which
     # is what macOS ships) treats an empty array as unbound and aborts.
-    if ! output="$("$sigma" convert -t "$target" -p "$pipeline" ${extra[@]+"${extra[@]}"} "$CANARY" 2>/dev/null)"; then
-      echo "FAILED (conversion error)"
+    if ! output="$("$sigma" convert -t "$target" -p "$pipeline" ${extra[@]+"${extra[@]}"} "$CANARY" 2>"$err_file")"; then
+      echo "FAILED"
+      { grep -E '^Error:' "$err_file" || tail -n 1 "$err_file"; } | sed 's/^/             /' >&2
+      rm -f "$err_file"
       failures=$((failures + 1))
       continue
     fi
+    rm -f "$err_file"
     # Exit 0 with no query is the silent failure this check exists for.
     if [ -z "${output//[[:space:]]/}" ]; then
       echo "FAILED (exited 0 but produced no query)"

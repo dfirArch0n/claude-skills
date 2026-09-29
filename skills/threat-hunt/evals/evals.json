@@ -1,6 +1,6 @@
 {
   "skill_name": "threat-hunt",
-  "note": "Prompts for the skill-creator evaluation loop. Each is written the way a security leader actually types, not as a clean specification.",
+  "note": "Prompts for the skill-creator evaluation loop. Each is written the way a security leader actually types, not as a clean specification. All platforms, index names, accounts and scenarios are INVENTED for testing and describe no real environment.",
   "evals": [
     {
       "id": 1,

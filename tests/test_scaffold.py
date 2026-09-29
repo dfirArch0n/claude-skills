@@ -6,6 +6,7 @@ never half-create, and never let real hunt output land in a public repository
 without saying so.
 """
 
+import shutil
 from datetime import date
 from pathlib import Path
 
@@ -122,24 +123,69 @@ def test_no_publication_warning_outside_the_skills_repository(tmp_path, template
     assert result.warnings == ()
 
 
-def test_publication_warning_fires_inside_the_skills_repository(tmp_path, templates):
-    # The other half: creating a package inside this public checkout must say so
-    # out loud. .gitignore stops the commit, but the files are still on disk in
-    # a directory the owner may share or screen-share. See ADR 0003.
+def test_creation_inside_the_skills_repository_is_refused(templates):
+    # The public-repository control, upgraded from a warning to a refusal after
+    # the second-AI review pointed out the obvious: new_hunt.py defaults to
+    # ./hunts, so running the documented command from this checkout wrote hunt
+    # output into the public repository and only mentioned it afterwards.
+    repo_root = Path(__file__).resolve().parents[1]
+    with pytest.raises(ScaffoldError, match="public skills repository"):
+        create_hunt("rmm-persistence", repo_root / "hunts", templates, "hunter", date(2026, 9, 29))
+
+
+def test_the_refusal_leaves_nothing_behind(templates):
+    # A control that half-executes is not a control. The destination check runs
+    # before any directory is created, so a refused run is indistinguishable
+    # from one that never happened.
+    repo_root = Path(__file__).resolve().parents[1]
+    with pytest.raises(ScaffoldError):
+        create_hunt("leftover-check", repo_root / "hunts", templates, "h", date(2026, 9, 29))
+    assert not (repo_root / "hunts").exists()
+
+
+def test_the_refusal_can_be_overridden_deliberately(templates):
+    # Testing the scaffolding itself has to be possible. The override is
+    # explicit and still warns, so it cannot be taken accidentally.
     repo_root = Path(__file__).resolve().parents[1]
     result = create_hunt(
-        "rmm-persistence", repo_root / "hunts", templates, "hunter", date(2026, 9, 29)
+        "rmm-persistence",
+        repo_root / "hunts",
+        templates,
+        "hunter",
+        date(2026, 9, 29),
+        allow_in_skills_repo=True,
     )
     try:
         assert result.warnings
         assert "public" in result.warnings[0]
     finally:
-        # These tests write into the real repository to exercise the real path
-        # check, so clean up rather than leaving an ignored directory behind.
-        for path in sorted(result.package_dir.rglob("*"), reverse=True):
-            path.unlink() if path.is_file() else path.rmdir()
-        result.package_dir.rmdir()
-        (repo_root / "hunts").rmdir()
+        shutil.rmtree(repo_root / "hunts", ignore_errors=True)
+
+
+def test_a_write_failure_leaves_no_package_behind(tmp_path, templates, monkeypatch):
+    # The half-created package, reproduced. The package is assembled in a
+    # staging directory and moved into place, so a disk error partway through
+    # cannot strand the hunter with a package missing its gap register -- and
+    # cannot lock them out of their own slug, since the refusal to overwrite
+    # would then apply to the wreckage.
+    real_write = Path.write_text
+    calls = {"n": 0}
+
+    def flaky(self, *args, **kwargs):
+        calls["n"] += 1
+        if calls["n"] == 3:
+            raise OSError("No space left on device")
+        return real_write(self, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "write_text", flaky)
+
+    with pytest.raises(ScaffoldError, match="Could not create"):
+        create_hunt("rmm-persistence", tmp_path / "hunts", templates, "h", date(2026, 9, 29))
+
+    monkeypatch.undo()
+    assert not (tmp_path / "hunts" / "2026-09-29-rmm-persistence").exists()
+    # The staging directory is cleaned up too, rather than left as debris.
+    assert list((tmp_path / "hunts").iterdir()) == []
 
 
 def test_the_shipped_templates_are_all_present():

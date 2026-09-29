@@ -54,25 +54,38 @@ retention are usually known; those three are usually assumed.
 
 ## Finding the right data source
 
-Work from the behavior to the data component, then to the local source:
+Work from the behavior to the telemetry requirement, then to the local source:
 
 1. Take the ATT&CK technique ID from the hypothesis.
-2. Read its **data sources and data components** on the technique page — ATT&CK
-   names them (for example `Process: Process Creation`, `Network Traffic: Network
-   Connection Creation`, `Logon Session: Logon Session Creation`).
+2. On the technique page, read its **Detection Strategies**, and the
+   **Analytics** under them. Each analytic names the **Log Sources** and **Data
+   Components** it needs — for example `Process: Process Creation`,
+   `Network Traffic: Network Connection Creation`.
 3. Map each data component to what your estate actually produces: which agent,
    which event ID, which table.
 
-That middle step matters because it decouples the hunt from a vendor. "Process
-creation" is the requirement; Sysmon Event ID 1, `DeviceProcessEvents`, and
-`ProcessRollup2` are three implementations of it. A hypothesis written against the
-data component survives a tooling change; one written against an event ID does not.
+**ATT&CK v18 (October 2025) changed this page.** The old flat *Data Sources*
+listing is deprecated. Detections were replaced by Detection Strategies, which
+group Analytics, which in turn cite Log Sources and Data Components. Data
+Components survive as the logging layer and are still the right unit to survey
+against; guidance that sends you to a technique's "Data Sources" section is
+describing a page that no longer looks like that.
+
+Step 2 matters because it decouples the hunt from a vendor. "Process creation"
+is the requirement; Sysmon Event ID 1, `DeviceProcessEvents`, and
+`ProcessRollup2` are three implementations of it. A hypothesis written against
+the data component survives a tooling change; one written against an event ID
+does not.
 
 Where an estate has never been mapped this way, DeTT&CT is the tool that
 formalises it — but a first pass in the survey table below gets you further than
 waiting for a programme.
 
 ## The gap register
+
+> Every figure, team name and percentage in the examples below is **invented**
+> to illustrate the shape of an entry. This is a public repository; nothing here
+> describes a real estate.
 
 Every partial or absent Evidence item becomes an entry in `02-gaps.yml`. A gap
 with no owner and no ask is a complaint; the schema exists to prevent that.

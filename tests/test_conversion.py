@@ -194,9 +194,10 @@ def test_pipeline_override_replaces_the_default(rule, tmp_path):
 @pytest.mark.parametrize(
     ("spec", "expected"),
     [
-        ("splunk", ("splunk", None)),
-        ("kusto:sentinel_asim", ("kusto", "sentinel_asim")),
-        ("log_scale:", ("log_scale", None)),
+        ("splunk", ("splunk", None, None)),
+        ("kusto:sentinel_asim", ("kusto", "sentinel_asim", None)),
+        ("log_scale:", ("log_scale", None, None)),
+        ("splunk:splunk_cim:data_model", ("splunk", "splunk_cim", "data_model")),
     ],
 )
 def test_target_spec_parsing(spec, expected):
@@ -251,3 +252,164 @@ def test_an_empty_error_is_still_reportable():
     # must not blow up building itself, because that would turn a reported
     # failure into a crash.
     assert first_error_line("   \n  ") == "(no error message)"
+
+
+# --- a pipeline that needs a format ----------------------------------------
+
+
+def test_splunk_cim_gets_the_data_model_format(rule, tmp_path):
+    # The most dangerous defect the second-AI review found. splunk_cim maps
+    # fields onto the CIM data model; without -f data_model sigma-cli emits a
+    # bare filter over Processes.* attributes. That converts, reports success,
+    # and returns zero rows in an ordinary search -- a false all-clear that
+    # looks exactly like a clean hunt result.
+    seen = []
+
+    def spy(argv):
+        seen.append(argv)
+        return CommandResult(0, "| tstats count from datamodel=Endpoint.Processes", "")
+
+    convert_rule(rule, ["splunk:splunk_cim"], tmp_path / "g", runner=spy, sigma_binary="sigma")
+    assert "-f" in seen[0]
+    assert "data_model" in seen[0]
+
+
+def test_an_explicit_format_wins(rule, tmp_path):
+    # The derived format is a safety net, not a straitjacket. A hunter who wants
+    # savedsearches.conf must be able to say so.
+    seen = []
+
+    def spy(argv):
+        seen.append(argv)
+        return CommandResult(0, "[saved search]", "")
+
+    convert_rule(
+        rule, ["splunk:splunk_cim:savedsearches"], tmp_path / "g", runner=spy, sigma_binary="s"
+    )
+    assert seen[0][seen[0].index("-f") + 1] == "savedsearches"
+
+
+def test_targets_without_a_format_requirement_pass_none(rule, tmp_path):
+    # The inverse: passing -f where it is not wanted would change output shape
+    # for every other platform.
+    seen = []
+
+    def spy(argv):
+        seen.append(argv)
+        return CommandResult(0, "DeviceProcessEvents", "")
+
+    convert_rule(rule, ["kusto"], tmp_path / "g", runner=spy, sigma_binary="sigma")
+    assert "-f" not in seen[0]
+
+
+def test_elastalert_gets_the_pipeline_check_override(rule):
+    # Same pySigma quirk as esql: the ECS pipelines map elastalert's fields
+    # correctly but never registered against the target. Verified by converting
+    # the canary rule both ways.
+    argv = build_command("sigma", rule, TARGETS["elastalert"], "ecs_windows")
+    assert "--disable-pipeline-check" in argv
+
+
+# --- output files must not collide or go stale ------------------------------
+
+
+def test_two_pipelines_for_one_target_get_separate_files(rule, tmp_path):
+    # Reproduced by the reviewer: kusto:microsoft_xdr and kusto:sentinel_asim
+    # both wrote <stem>.kql, so the second silently replaced the first while the
+    # manifest claimed two outputs. Hunting Defender and Sentinel in one run is
+    # an ordinary thing to want.
+    out = tmp_path / "generated"
+    results = convert_rule(
+        rule,
+        ["kusto:microsoft_xdr", "kusto:sentinel_asim"],
+        out,
+        runner=ok("DeviceProcessEvents"),
+        sigma_binary="sigma",
+    )
+
+    paths = {r.output_path for r in results}
+    assert len(paths) == 2
+    assert (out / "rmm-persistence.microsoft_xdr.kql").exists()
+    assert (out / "rmm-persistence.sentinel_asim.kql").exists()
+
+
+def test_a_single_target_keeps_the_simple_filename(rule, tmp_path):
+    # Disambiguation only where it is needed. Putting the pipeline into every
+    # filename would make the common case ugly for no benefit.
+    out = tmp_path / "generated"
+    convert_rule(rule, ["kusto"], out, runner=ok("DeviceProcessEvents"), sigma_binary="sigma")
+    assert (out / "rmm-persistence.kql").exists()
+
+
+def test_a_failed_conversion_removes_stale_output(rule, tmp_path):
+    # The quietest of the failure modes. A conversion that worked yesterday and
+    # fails today leaves its old query on disk; the manifest says FAILED, the
+    # directory says otherwise, and the hunter runs logic that no longer matches
+    # the rule. Only the exact path this run would have written is touched.
+    out = tmp_path / "generated"
+    convert_rule(rule, ["splunk"], out, runner=ok("old query"), sigma_binary="sigma")
+    assert (out / "rmm-persistence.spl").exists()
+
+    results = convert_rule(
+        rule,
+        ["splunk"],
+        out,
+        runner=lambda argv: CommandResult(2, "", "Error: pipeline not found"),
+        sigma_binary="sigma",
+    )
+
+    assert not (out / "rmm-persistence.spl").exists()
+    assert "Removed stale" in results[0].error
+
+
+# --- disk failures are recorded, never raised -------------------------------
+
+
+def test_a_write_failure_is_recorded_and_the_others_continue(rule, tmp_path, monkeypatch):
+    # Reproduced by the reviewer as a Critical: an unguarded write meant a disk
+    # error on the first platform took the remaining platforms AND the manifest
+    # with it. Converting is the expensive part; losing three good queries to a
+    # full disk on the fourth is the opposite of the design rule.
+    out = tmp_path / "generated"
+    real_write = Path.write_text
+
+    def flaky(self, *args, **kwargs):
+        if self.name.endswith(".spl"):
+            raise OSError("No space left on device")
+        return real_write(self, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "write_text", flaky)
+    results = convert_rule(rule, ["splunk", "kusto"], out, runner=ok("query"), sigma_binary="sigma")
+    monkeypatch.undo()
+
+    assert results[0].succeeded is False
+    assert "could not write" in results[0].error
+    assert results[1].succeeded is True
+    # The audit trail survives the disk error that destroyed one query.
+    assert (out / MANIFEST_NAME).exists()
+
+
+def test_an_unwritable_output_directory_still_returns_results(rule, tmp_path, monkeypatch):
+    # Boundary case: if the directory itself cannot be made, the caller still
+    # gets one recorded failure per target rather than a traceback, so the CLI
+    # can explain what happened for every platform asked for.
+    def no_mkdir(self, *args, **kwargs):
+        raise OSError("Read-only file system")
+
+    monkeypatch.setattr(Path, "mkdir", no_mkdir)
+    results = convert_rule(
+        rule, ["splunk", "kusto"], tmp_path / "g", runner=ok("q"), sigma_binary="sigma"
+    )
+    monkeypatch.undo()
+
+    assert len(results) == 2
+    assert all(not r.succeeded for r in results)
+    assert "Read-only file system" in results[0].error
+
+
+def test_an_error_marker_with_the_message_on_the_next_line():
+    # Caught by the reviewer: an "Error:" line whose message wraps produced a
+    # blank failure reason, so the CLI printed FAILED with nothing after it.
+    assert first_error_line("Usage: sigma\nError:\nThe pipeline was not found.") == (
+        "The pipeline was not found."
+    )

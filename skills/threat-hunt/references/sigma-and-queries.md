@@ -66,7 +66,7 @@ Getting it wrong produces a query that runs and returns nothing.
 | Target | Pipeline | Maps to |
 |---|---|---|
 | `splunk` | `splunk_windows` | Windows log source conditions |
-| `splunk` | `splunk_cim` | CIM data model — pair with `-f data_model` |
+| `splunk` | `splunk_cim` | CIM data model — **requires** `-f data_model` |
 | `splunk` | `splunk_sysmon_acceleration` | Sysmon search acceleration keywords |
 | `kusto` | `microsoft_xdr` | Defender XDR tables (`DeviceProcessEvents`) |
 | `kusto` | `sentinel_asim` | Sentinel ASIM (`imProcessCreate`) |
@@ -81,11 +81,29 @@ Getting it wrong produces a query that runs and returns nothing.
 pipeline emits `#event_simpleName`, using LogScale's tag index, which is
 dramatically faster. Use FDR only when reading replicated data out of a lake.
 
-## The ES|QL pipeline gap
+### `splunk_cim` without `data_model` is a wrong query, not a failed one
+
+Converting with `-p splunk_cim` and no format succeeds, prints a plausible
+query, and gives you this:
+
+```
+Processes.process_path IN ("*\\AnyDesk.exe", ...) Processes.process="*--install*"
+```
+
+Those are data-model attribute names. In an ordinary search they resolve to
+nothing, so the query runs clean and returns zero rows — which reads exactly
+like "the hunt found nothing". It has to be `-f data_model`, which produces the
+`| tstats ... from datamodel=Endpoint.Processes` form.
+
+`convert.py` applies `data_model` automatically whenever the pipeline is
+`splunk_cim`, and records the format it used in the manifest.
+
+## The ES|QL and Elastalert pipeline gap
 
 `sigma list pipelines esql` returns only the two CrowdStrike pipelines. The ECS
 pipelines register themselves for `elasticsearch`, `eql`, `lucene` and
-`opensearch` — **not for `esql`** — so the obvious command is rejected:
+`opensearch` — **not for `esql`, and not for `elastalert`** — so the obvious
+command is rejected for both:
 
 ```
 Error: The pipeline 'ecs_windows' is not intended to be used with the target esql.
@@ -97,9 +115,10 @@ The mapping is fine; only the registration is missing. Override the check:
 sigma convert -t esql -p ecs_windows --disable-pipeline-check rule.yml
 ```
 
-That produces correct ECS field names. `convert.py` applies the override for
-`esql` automatically and records it in `conversion-manifest.json`, so the next
-hunter does not lose an hour to it.
+That produces correct ECS field names, verified by converting the canary rule
+both ways. `convert.py` applies the override for `esql` and `elastalert`
+automatically and records it in `conversion-manifest.json`, so the next hunter
+does not lose an hour to it.
 
 ## One rule, five platforms
 

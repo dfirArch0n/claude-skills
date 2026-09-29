@@ -118,14 +118,18 @@ every partial and absent one has a register entry with an owner.
 Express hunt logic as Sigma YAML, lint it, then convert it to every platform the
 human runs:
 
+`$SKILL` below is the directory holding this file — the skill is usually
+symlinked, so use its real path rather than one relative to the repository you
+happen to be standing in. Use `python3`; plain `python` is absent on macOS.
+
 ```sh
-skills/threat-hunt/scripts/setup_sigma.sh --check   # once, verifies every backend
+$SKILL/scripts/setup_sigma.sh --check   # once, verifies every backend
 
 # Defaults to splunk kusto esql log_scale -- one dialect per platform.
-python skills/threat-hunt/scripts/convert.py hunts/<hunt>/queries/<name>.sigma.yml
+python3 $SKILL/scripts/convert.py hunts/<hunt>/queries/<name>.sigma.yml
 
-# Name a pipeline when the data lives elsewhere:
-python skills/threat-hunt/scripts/convert.py <rule> --targets kusto:sentinel_asim splunk:splunk_cim
+# target[:pipeline[:format]] when the data lives elsewhere:
+python3 $SKILL/scripts/convert.py <rule> --targets kusto:sentinel_asim splunk:splunk_cim
 ```
 
 Targets are **query languages, not plugin names** — `log_scale` is CrowdStrike
@@ -202,8 +206,12 @@ Produce:
 Scaffold it first, then fill it as you go:
 
 ```sh
-uv run python skills/threat-hunt/scripts/new_hunt.py --slug <short-slug>
+python3 $SKILL/scripts/new_hunt.py --slug <short-slug> --hunts-root <your-hunt-repo>/hunts
 ```
+
+`--hunts-root` matters: a hunt package names hosts, accounts and the teams that
+own broken telemetry, so it belongs in the human's private hunt repository. The
+scaffolder refuses to write into the public skills repository.
 
 ```
 hunts/YYYY-MM-DD-<slug>/

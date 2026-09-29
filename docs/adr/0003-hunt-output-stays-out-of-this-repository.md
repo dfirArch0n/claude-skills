@@ -26,10 +26,17 @@ scheduler.
 Hunt packages are written to `hunts/` in the **analyst's own private
 repository**, never into this one.
 
-Three mechanisms enforce it rather than relying on care:
+Four mechanisms enforce it rather than relying on care:
 
-- `hunts/` is in `.gitignore` here, so a `new_hunt.py` run inside this checkout
-  cannot reach a commit.
+- `/hunts/` is in `.gitignore` here, so a `new_hunt.py` run inside this checkout
+  cannot reach a commit. The leading slash is load-bearing: an unanchored
+  `hunts/` matches at every level, and the first version of this file silently
+  excluded `examples/hunts/` too, keeping the worked example out of the
+  repository entirely. `tests/test_examples.py` now asserts the example is
+  tracked, because a rule that over-matches fails silently by construction.
+- `scaffold.create_hunt` **refuses** to write inside this repository unless
+  explicitly overridden, checked before any file is created. A warning issued
+  after the files exist is an observation, not a control.
 - `.env.op` is git-ignored here, unlike in `security-tooling-dev` where it is
   committed. It holds only `op://` references and no values, but a reference
   still names a vault and an item, and that is free reconnaissance.

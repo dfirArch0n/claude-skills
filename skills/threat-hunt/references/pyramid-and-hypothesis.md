@@ -19,21 +19,27 @@ David Bianco's Pyramid of Pain ranks indicator types by what it costs the
 adversary when you detect on them. Bottom is trivial for them to change; top
 forces them to relearn how they operate.
 
-| Rung | Indicator | Cost to the adversary | Shelf life |
-|---|---|---|---|
-| 6 | **TTPs** | Retrain, redesign the operation | Years |
-| 5 | **Tools** | Find or build a replacement | Months |
-| 4 | **Network / host artifacts** | Return to the lab, reconfigure, recompile | Weeks |
-| 3 | **Domain names** | Register another; minutes, and a small bill | Days |
-| 2 | **IP addresses** | Move; minutes, free | Hours |
-| 1 | **Hash values** | Change a byte | Seconds |
+| Rung | Indicator | What it costs the adversary to defeat your detection |
+|---|---|---|
+| 6 | **TTPs** | Retrain; redesign how they operate |
+| 5 | **Tools** | Find or build a replacement capability |
+| 4 | **Network / host artifacts** | Return to the lab, reconfigure, recompile |
+| 3 | **Domain names** | Register another — minutes, and a small bill |
+| 2 | **IP addresses** | Move — minutes, free |
+| 1 | **Hash values** | Change a byte |
 
 Bianco's point is that detecting across enough TTPs leaves an adversary two
 options: give up, or reinvent themselves from scratch. Nothing lower does that.
 
-The rung is not a quality score for the hunt — an IOC sweep during an active
-campaign can be exactly the right call. It is a **shelf-life** estimate, and
-recording it is how a hunt programme learns whether it is buying years or hours.
+The pyramid ranks **relative cost**, not calendar time. It does not assign
+detections a lifetime, and any duration you attach is your own judgement about
+your own adversaries — worth writing down as an estimate, worth not mistaking
+for a measurement.
+
+The rung is also not a quality score for the hunt. An IOC sweep during an active
+campaign can be exactly the right call. Recording the rung is how a programme
+learns, over many hunts, whether it is buying durable detection or churning
+indicators.
 
 ## How to climb
 
@@ -84,7 +90,7 @@ no proxy logging of POST bodies and no way to tell a submission from a page view
 the evidence stops.
 
 **Correct outcome.** Run the sweep, and say so in the charter: *rung 3, IOC
-sweep, shelf life days.* Then raise the gap — proxy telemetry that distinguishes
+sweep, expected shelf life days.* Then raise the gap — proxy telemetry that distinguishes
 submission from browse — and put the real hunt on the backlog. The sweep took
 two hours. The gap entry is worth more than the sweep.
 
@@ -118,17 +124,26 @@ nothing else.
 
 **Strong:**
 
-- **Actor** — ransomware affiliates, unattributed.
-- **Behavior** — named-pipe impersonation for privilege escalation
-  (ATT&CK T1134.001), which beacon-style implants need regardless of the
-  implant's brand.
-- **Location** — Windows servers in the datacentre VLANs.
-- **Evidence** — Sysmon Event ID 17/18 (pipe created/connected), joined to
-  process creation for the creating process. Present if a short-lived pipe with a
-  random-looking name is created by a process that is not a known service host.
+- **Actor** — unattributed, pre-ransomware intrusion activity.
+- **Behavior** — reading LSASS process memory to harvest credentials
+  (ATT&CK T1003.001). Any credential dumper must open a handle to LSASS with
+  read access, whatever the tool is called.
+- **Location** — Windows servers and privileged administrative workstations.
+- **Evidence** — Sysmon Event ID 10 (ProcessAccess) where the target image is
+  `lsass.exe` and the granted access mask includes memory-read rights, joined to
+  process creation for the accessing process. Present when the accessing process
+  is not one of the known security agents.
 
-Strong because the behavior survives the tool changing its name, the location
-bounds the data, and the evidence names the field you will actually query.
+Strong because the behavior survives the tool being renamed or rewritten, the
+location bounds the data, and the evidence names a field that genuinely
+demonstrates the behavior rather than merely co-occurring with it.
+
+That last property is the one to check hardest. It is easy to write an
+authoritative-sounding hypothesis whose evidence does not actually prove its
+behavior — pipe-creation events, for instance, show that a pipe was created, not
+that a token was impersonated. Before accepting the Evidence line, ask: *if I
+see exactly this, does the behavior necessarily follow?* Where the honest answer
+is "it is consistent with it", say so in the charter and expect a larger bucket D.
 
 **Where Actor is unknown**, leave it out. Most good hunts are actor-agnostic —
 and a hunt that names an actor it cannot evidence is telling itself a story.
@@ -141,9 +156,9 @@ Run all three before writing a query. Write the answers into the charter.
 
 > What result would make me abandon this?
 
-"Every named-pipe creation on these servers resolves to one of four known
-service binaries, across 90 days" is an answer. "I didn't find anything yet" is
-not — it is a statement about effort, not evidence.
+"Every process that opened LSASS with read access on these servers resolves to
+one of four known security agents, across 90 days" is an answer. "I didn't find
+anything yet" is not — it is a statement about effort, not evidence.
 
 If nothing would falsify the hypothesis, it is usually because the behavior is
 defined too loosely ("suspicious PowerShell"). Tighten the behavior until a

@@ -52,6 +52,8 @@ does not quietly become a D because the hunt ended.
 
 ## Coverage statements
 
+> The percentages below are illustrative, not measured.
+
 A negative result is worth writing only if it says what was actually ruled out.
 Three elements, every time:
 
@@ -118,6 +120,9 @@ Reporting, the hunt package this came from, related detections.
 ```
 
 ## Worked detection candidate
+
+> Invented, like every other example in these references, and built from public
+> threat reporting. No real environment is described.
 
 Abridged, from the RMM hunt used throughout these references:
 
