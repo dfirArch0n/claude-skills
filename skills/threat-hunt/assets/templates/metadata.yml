@@ -1,0 +1,36 @@
+# Machine-readable hunt record. Across many hunts, these files are the
+# coverage metric: which techniques, at which rung, finding what.
+hunt: "{{SLUG}}"
+opened: "{{DATE}}"
+closed: null
+hunter: "{{HUNTER}}"
+status: open                  # open | aborted | complete
+
+trigger:
+  type: null                  # threat_report | attack_gap | incident_lesson | anomaly | hunch | exec_question
+  source: null
+
+pyramid:
+  rung: null                  # 1-6
+  classification: null        # hunt | ioc_sweep
+  shelf_life: null            # hours | days | weeks | months | years
+
+attack:
+  tactics: []
+  techniques: []              # e.g. ["T1543.003", "T1219"]
+
+scope:
+  location: null
+  window_days: null
+  clock_days: null
+
+findings:
+  bucket_a: 0
+  bucket_b: 0
+  bucket_c: 0
+  bucket_d: 0
+  open: 0
+
+gaps: []                      # e.g. ["GAP-001", "GAP-003"]
+detections: []                # e.g. ["ADS-0001"]
+platforms: []                 # e.g. ["splunk", "kusto", "log_scale"]

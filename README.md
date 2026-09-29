@@ -10,7 +10,9 @@ it works, with no install step.
 
 ## Skills
 
-None yet — the first one lands in the next pull request.
+| Skill | What it does |
+|---|---|
+| [`threat-hunt`](skills/threat-hunt/) | Hypothesis-driven threat hunting built on the Pyramid of Pain. Climbs a trigger from indicators to TTPs, surveys whether the telemetry to test it actually exists, writes the logic once as Sigma and converts it to Splunk, Sentinel/Defender, Elastic and CrowdStrike NG-SIEM, then triages findings and hands surviving logic to detection engineering. |
 
 ## Layout
 

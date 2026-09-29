@@ -1,0 +1,45 @@
+# Hunt report: {{SLUG}}
+
+- **Dates:** {{DATE}} – <close date>
+- **Hunter:** {{HUNTER}}
+- **Rung hunted at:** <1–6>  |  **Hunt or sweep:** <hunt | IOC sweep>
+
+## Executive summary
+
+<Five sentences. What was hypothesised, what was searched, what was found in
+each bucket, what the organisation cannot see, and what should happen next.
+Written for someone who will read nothing else.>
+
+## What we looked for
+
+<The hypothesis in plain language, and why it was worth a week.>
+
+## What we found
+
+- **Malicious (A):** <count and one line each, or "none">
+- **Unsanctioned (B):** <count and one line each>
+- **Systems issues (C):** <count and one line each>
+- **Explained (D):** <count>
+
+## What we cannot see
+
+<The gap register, in prose. This section is the one that funds collection.>
+
+## Coverage
+
+<The coverage statement from findings: share of estate, window, confidence, and
+the evasion that would have survived.>
+
+## Detections proposed
+
+<One line per ADS candidate, with its status: ready or draft.>
+
+## Backlog
+
+<Hypotheses this hunt spawned and did not chase.>
+
+## Retro
+
+- **The gates, in hindsight:** <was it falsifiable? did the so-what hold? did the
+  clock hold?>
+- **What would make the next one faster:** <tooling, access, data, knowledge>
