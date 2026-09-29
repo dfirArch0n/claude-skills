@@ -98,8 +98,8 @@ sigma convert -t esql -p ecs_windows --disable-pipeline-check rule.yml
 ```
 
 That produces correct ECS field names. `convert.py` applies the override for
-`esql` automatically and notes it in the output file, so the next hunter does not
-lose an hour to it.
+`esql` automatically and records it in `conversion-manifest.json`, so the next
+hunter does not lose an hour to it.
 
 ## One rule, five platforms
 

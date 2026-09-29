@@ -119,11 +119,19 @@ Express hunt logic as Sigma YAML, lint it, then convert it to every platform the
 human runs:
 
 ```sh
-skills/threat-hunt/scripts/setup_sigma.sh --check     # one time, verifies backends
-uv run python skills/threat-hunt/scripts/convert.py \
-    hunts/<hunt>/queries/<name>.sigma.yml \
-    --targets splunk kusto elasticsearch crowdstrike
+skills/threat-hunt/scripts/setup_sigma.sh --check   # once, verifies every backend
+
+# Defaults to splunk kusto esql log_scale -- one dialect per platform.
+python skills/threat-hunt/scripts/convert.py hunts/<hunt>/queries/<name>.sigma.yml
+
+# Name a pipeline when the data lives elsewhere:
+python skills/threat-hunt/scripts/convert.py <rule> --targets kusto:sentinel_asim splunk:splunk_cim
 ```
+
+Targets are **query languages, not plugin names** — `log_scale` is CrowdStrike
+NG-SIEM, and `crowdstrike` is not a target. `convert.py --help` lists them all
+with their pipelines. A failure on one platform never stops the others; the run
+reports what broke and writes a manifest beside the queries.
 
 ### Know where Sigma stops
 
