@@ -7,7 +7,7 @@ and used on its own.
 
 ## Owner context
 Security leader (detection and response, incident handling, forensics); not a
-strong programmer. Explain code in plain language and define terms (type hints,
+strong programr. Explain code in plain language and define terms (type hints,
 mocks, fixtures, protocols) briefly the first time they appear.
 
 Principles: everything as code; modular packages; prompts and configuration in
@@ -33,6 +33,11 @@ See `docs/adr/0003`.
 4. Second-AI review (Codex/Gemini) before the PR. Fix real issues; skip nitpicks.
 5. Open a PR with changes, tests, review outcome, and decisions. Do not merge;
    the human approves.
+
+## Writing conventions
+- **American English**, everywhere: program, organization, behavior, analyze,
+  sanitize, center, judgment. This is a public repository and the audience is a
+  US security industry; mixed spelling reads as inattention.
 
 ## Skill authoring conventions
 - `SKILL.md` carries the workflow and stays under ~350 lines. Depth goes in

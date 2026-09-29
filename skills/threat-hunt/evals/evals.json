@@ -1,0 +1,72 @@
+{
+  "skill_name": "threat-hunt",
+  "note": "Prompts for the skill-creator evaluation loop. Each is written the way a security leader actually types, not as a clean specification. All platforms, index names, accounts and scenarios are INVENTED for testing and describe no real environment.",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "CISA just dropped an advisory on Akira ransomware - big list of IPs and hashes plus some notes on how they get in and stay in. I've got Splunk with Sysmon on most things and CrowdStrike NG-SIEM. Where do I even start with this?",
+      "expected_output": "Climbs from the indicator list to a TTP-level hypothesis rather than sweeping the IOCs, names the rung reached, produces an ABLE hypothesis that passes the three gates, and surveys telemetry before writing queries. Should produce Sigma plus converted SPL and LogScale CQL.",
+      "files": [],
+      "name": "akira-ioc-dump",
+      "assertions": [
+        "Climbs above the indicator list to a behavior- or TTP-level hypothesis, rather than only sweeping the hashes and IPs",
+        "Names the Pyramid of Pain rung the hunt operates at",
+        "Distinguishes the IOC sweep from the hunt instead of presenting the sweep as a hunt",
+        "States a falsifiable hypothesis: names a specific result that would end the hunt",
+        "Checks whether the required telemetry exists before presenting queries",
+        "Produces queries for both platforms the user named (Splunk and CrowdStrike NG-SIEM)",
+        "Timeboxes the hunt with an explicit maximum duration",
+        "Raises at least one data gap with a named owner and a specific ask"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "want to hunt for AiTM phishing against our m365 tenant. honestly not sure we even log the right stuff for it",
+      "expected_output": "Leads with the data survey rather than queries, because the user has flagged uncertainty about collection. Produces a gap register with owners and asks, and continues the hunt on degraded evidence with reduced confidence recorded rather than stopping.",
+      "files": [],
+      "name": "aitm-m365-unknown-collection",
+      "assertions": [
+        "Leads with data availability rather than queries, given the user flagged uncertainty about logging",
+        "Names the specific M365/Entra log sources required (e.g. sign-in logs, unified audit log, MailItemsAccessed)",
+        "Raises a gap entry with a named owner and a specific ask for each missing or uncertain source",
+        "Continues the hunt on degraded evidence rather than stopping at the gap",
+        "States explicitly that confidence is reduced where evidence is partial",
+        "Produces at least one concrete KQL query against a named table",
+        "States a falsifiable hypothesis"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "We spent last sprint hunting for malicious scheduled tasks across the server estate and found nothing. Need to write it up for the security steering group on Thursday. Kind of feels like a waste of a sprint.",
+      "expected_output": "Refuses to let the report say 'we found nothing' without a coverage statement naming share of estate, window, confidence, and the evasion that would have survived. Surfaces the bucket B/C and gap-register value the sprint produced. Should push back on 'waste of a sprint'.",
+      "files": [],
+      "name": "negative-result-writeup",
+      "assertions": [
+        "Declines to report 'we found nothing' without a coverage statement",
+        "Coverage statement names share of estate searched, the time window, and a confidence level",
+        "Names the specific evasion that would have survived the hunt's blind spots",
+        "Surfaces non-adversary value from the sprint: systems issues, data gaps, or detection candidates",
+        "Pushes back on the user's 'waste of a sprint' framing rather than agreeing with it",
+        "Produces an executive summary distinct from the analyst-level detail",
+        "Marks clearly where the user must supply real numbers, rather than inventing findings"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Take this hunt query and make it into a real detection we can ship: index=win EventCode=4698 TaskName=\"\\\\Microsoft\\\\Windows\\\\*\" NOT user IN (svc_deploy, svc_sccm)",
+      "expected_output": "Produces an ADS-format detection candidate with Blind Spots and False Positives populated rather than just a tidied query. Should ask for the false-positive counts the hunt produced and state the expected volume, or mark the candidate a draft and name what is missing.",
+      "files": [],
+      "name": "spl-to-detection-candidate",
+      "assertions": [
+        "Produces a structured detection document, not just a tidied query",
+        "Document includes a blind spots or assumptions section",
+        "Blind spots name a specific evasion rather than a generic 'an attacker could evade this'",
+        "Enumerates concrete false positive sources for this detection",
+        "States expected alert volume, or marks the candidate a draft because volume is unknown",
+        "Provides validation steps that would generate a true positive",
+        "Notes at least one limitation in the supplied query (e.g. 4698 requires task-creation auditing be enabled, or that the TaskName filter targets the legitimate Microsoft path)",
+        "Maps the detection to MITRE ATT&CK T1053.005"
+      ]
+    }
+  ]
+}

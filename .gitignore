@@ -18,10 +18,20 @@ __pycache__/
 
 # Real hunt output never belongs in a public repository. Only the sanitised
 # worked examples under examples/ are tracked. See docs/adr/0003.
-hunts/
+#
+# Anchored with a leading slash on purpose: an unanchored `hunts/` matches at
+# EVERY level, so it also swallowed examples/hunts/ and silently kept the worked
+# example out of the repository. Caught by the second-AI review, and now by
+# tests/test_examples.py.
+/hunts/
 
 # macOS / editors
 .DS_Store
 .vscode/*
 !.vscode/settings.json
 !.vscode/extensions.json
+
+# Skill evaluation runs: generated transcripts, outputs and benchmarks. Kept on
+# disk so iteration N can be compared against N-1, kept out of git because they
+# are large, regenerable, and not part of the skill.
+/threat-hunt-workspace/
