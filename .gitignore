@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.venv/
+*.egg-info/
+
+# Environment / secrets
+# Unlike the private security-tooling-dev repo, .env.op is NOT committed here.
+# It holds only op:// references, never values — but this repository is public,
+# and a reference still names a vault and an item. See docs/adr/0003.
+.env.op
+.env
+.env.local
+*.key
+*.pem
+
+# Real hunt output never belongs in a public repository. Only the sanitised
+# worked examples under examples/ are tracked. See docs/adr/0003.
+hunts/
+
+# macOS / editors
+.DS_Store
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
