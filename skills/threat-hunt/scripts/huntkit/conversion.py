@@ -112,6 +112,11 @@ def has_bare_or(query: str) -> bool:
     A bare `or` is the shape that trips LogScale's precedence: the conjuncts
     before it bind only to the first disjunct. An `or` safely inside parentheses
     -- which is what the converter does emit for negated groups -- is fine.
+
+    Matched case-insensitively. LogScale emits lowercase `or`, which is the only
+    reason this fired at all before; Splunk emits uppercase `OR`, and a
+    case-sensitive check would silently pass any backend added to
+    BACKEND_WARNINGS that happens to shout.
     """
     depth = 0
     outside = []
@@ -122,7 +127,7 @@ def has_bare_or(query: str) -> bool:
             depth = max(0, depth - 1)
         elif depth == 0:
             outside.append(char)
-    return re.search(r"\bor\b", "".join(outside)) is not None
+    return re.search(r"\bor\b", "".join(outside), re.IGNORECASE) is not None
 
 
 def output_warnings(target: str, query: str) -> tuple[str, ...]:
