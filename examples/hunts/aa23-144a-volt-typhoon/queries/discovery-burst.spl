@@ -1,0 +1,21 @@
+``` Discovery burst: many different enumeration tools, one host, one account, ten minutes.
+    Platform: Splunk. Not run against a live instance.
+
+    Why native and not Sigma: Sigma filters one event at a time. This counts how many
+    DIFFERENT tools an account ran in a window, which needs an aggregation Sigma cannot
+    express. The tool list is taken from the "Enumeration of the Environment" section
+    of CISA AA23-144A.
+
+    Replace the first line with your own process-creation search. Field names follow
+    the Sigma convention (Image, CommandLine, User) used by the generated queries;
+    map them to your sourcetype. ```
+<your process-creation search> earliest=-30d
+| eval tool=lower(mvindex(split(Image, "\\"), -1))
+| search tool IN ("arp.exe", "dnscmd.exe", "ipconfig.exe", "ldifde.exe", "net.exe",
+    "net1.exe", "netsh.exe", "netstat.exe", "nltest.exe", "reg.exe", "systeminfo.exe",
+    "tasklist.exe", "wevtutil.exe", "whoami.exe", "wmic.exe")
+| bin _time span=10m
+| stats dc(tool) AS tool_count values(tool) AS tools values(CommandLine) AS commands
+    BY _time host User
+| where tool_count >= 5
+| sort - tool_count

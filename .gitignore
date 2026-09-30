@@ -16,7 +16,7 @@ __pycache__/
 *.key
 *.pem
 
-# Real hunt output never belongs in a public repository. Only the sanitised
+# Real hunt output never belongs in a public repository. Only the sanitized
 # worked examples under examples/ are tracked. See docs/adr/0003.
 #
 # Anchored with a leading slash on purpose: an unanchored `hunts/` matches at

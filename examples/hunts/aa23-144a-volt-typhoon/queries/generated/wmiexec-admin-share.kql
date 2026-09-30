@@ -1,0 +1,2 @@
+DeviceProcessEvents
+| where ProcessCommandLine contains "/Q" and ProcessCommandLine contains "/c" and ProcessCommandLine contains "\\\\127.0.0.1\\ADMIN$\\__"

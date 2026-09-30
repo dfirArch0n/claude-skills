@@ -1,0 +1,21 @@
+// Discovery burst: many different enumeration tools, one host, one account, ten minutes.
+// Platform: Microsoft Defender XDR (advanced hunting). Not run against a live tenant.
+//
+// Why native and not Sigma: Sigma filters one event at a time. This counts how many
+// DIFFERENT tools an account ran in a window, which needs an aggregation Sigma cannot
+// express. Every tool on the list is an ordinary admin binary; it is the burst that is
+// unusual. The list is taken from the "Enumeration of the Environment" section of
+// CISA AA23-144A.
+let discovery_tools = dynamic([
+    "arp.exe", "dnscmd.exe", "ipconfig.exe", "ldifde.exe", "net.exe", "net1.exe",
+    "netsh.exe", "netstat.exe", "nltest.exe", "reg.exe", "systeminfo.exe",
+    "tasklist.exe", "wevtutil.exe", "whoami.exe", "wmic.exe"]);
+DeviceProcessEvents
+| where Timestamp > ago(30d)
+| where FileName in~ (discovery_tools)
+| summarize ToolCount = dcount(FileName),
+            Tools = make_set(FileName),
+            Commands = make_set(ProcessCommandLine, 50)
+    by DeviceName, AccountName, Window = bin(Timestamp, 10m)
+| where ToolCount >= 5
+| order by ToolCount desc

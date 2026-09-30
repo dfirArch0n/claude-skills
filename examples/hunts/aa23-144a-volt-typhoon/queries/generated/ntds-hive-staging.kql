@@ -1,0 +1,2 @@
+DeviceProcessEvents
+| where (ProcessCommandLine contains "HarddiskVolumeShadowCopy" and ProcessCommandLine contains "ntds.dit") or ((ProcessCommandLine contains " save " and ProcessCommandLine contains "hklm") and (ProcessCommandLine contains "\\sam" or ProcessCommandLine contains "\\system" or ProcessCommandLine contains "\\security"))

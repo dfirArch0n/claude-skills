@@ -1,0 +1,30 @@
+title: Ntdsutil Creates Install-From-Media Copy of the AD Database
+id: 3b7f0c52-9a1e-4d8b-b6c4-1f2e8a9d0c11
+status: experimental
+description: >
+    ntdsutil used to create an IFM (install from media) set, which writes a copy
+    of ntds.dit and the SYSTEM and SECURITY hives to disk. AA23-144A shows the
+    actor launching it through wmic process call create, in both long and short
+    notation ("activate instance ntds ifm" / "ac i ntds ifm").
+references:
+    - https://www.cisa.gov/news-events/cybersecurity-advisories/aa23-144a
+author: threat-hunt skill worked example
+date: 2026-09-30
+logsource:
+    category: process_creation
+    product: windows
+detection:
+    selection_ntdsutil:
+        CommandLine|contains: 'ntdsutil'
+    selection_ifm:
+        CommandLine|contains:
+            - 'ifm'
+            - 'create full'
+    condition: selection_ntdsutil and selection_ifm
+falsepositives:
+    - A directory services team building install media for a new domain controller
+    - Backup tooling that snapshots AD through ntdsutil
+level: high
+tags:
+    - attack.credential-access
+    - attack.t1003.003

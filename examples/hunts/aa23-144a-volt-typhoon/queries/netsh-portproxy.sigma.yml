@@ -1,0 +1,33 @@
+title: Netsh Port Proxy Added or Removed
+id: 5f0b2c84-3d7e-4a9f-b1c2-4d5e6f7a8b44
+status: experimental
+description: >
+    netsh interface portproxy creates a listener that forwards inbound
+    connections to another host and port: a backdoor that bypasses firewall
+    policy. AA23-144A notes it "is not common for legitimate system
+    administration" and shows the actor removing the proxy afterwards, so the
+    delete is hunted as well as the add.
+references:
+    - https://www.cisa.gov/news-events/cybersecurity-advisories/aa23-144a
+    - https://attack.mitre.org/techniques/T1090/001/
+author: threat-hunt skill worked example
+date: 2026-09-30
+logsource:
+    category: process_creation
+    product: windows
+detection:
+    selection_portproxy:
+        CommandLine|contains: 'portproxy'
+    selection_change:
+        CommandLine|contains:
+            - ' add '
+            - ' delete '
+            - ' set '
+    condition: selection_portproxy and selection_change
+falsepositives:
+    - Developer workstations forwarding ports into WSL2 or local containers
+    - A documented, time-boxed migration
+level: high
+tags:
+    - attack.command-and-control
+    - attack.t1090.001

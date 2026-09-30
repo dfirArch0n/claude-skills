@@ -1,0 +1,10 @@
+// Security log cleared (event 1102), for Microsoft Sentinel.
+// Not run against a live workspace.
+//
+// Why this is hand-written: as with the ESENT rule, the Sigma rule targets a Windows
+// event log channel that Defender XDR does not expose as a table, so it does not
+// convert to KQL. Sentinel keeps Security events in SecurityEvent.
+SecurityEvent
+| where TimeGenerated > ago(30d)
+| where EventID == 1102
+| project TimeGenerated, Computer, Activity

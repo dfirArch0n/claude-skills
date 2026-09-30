@@ -1,0 +1,32 @@
+title: ESENT Events Referencing ntds.dit
+id: 4e9a1b73-2c6d-4f8e-a0b1-3c4d5e6f7a33
+status: experimental
+description: >
+    When ntdsutil copies the AD database, the ESENT database engine writes
+    events 216, 325, 326 and 327 to the Application log, and their detail names
+    the path the copy was written to. AA23-144A recommends filtering on these IDs
+    and on ntds.dit. This rule still works where process command lines are not
+    logged, and the path it recovers survives the attacker deleting the files.
+references:
+    - https://www.cisa.gov/news-events/cybersecurity-advisories/aa23-144a
+author: threat-hunt skill worked example
+date: 2026-09-30
+logsource:
+    product: windows
+    service: application
+detection:
+    selection:
+        Provider_Name: 'ESENT'
+        EventID:
+            - 216
+            - 325
+            - 326
+            - 327
+        Data|contains: 'ntds.dit'
+    condition: selection
+falsepositives:
+    - Legitimate IFM creation, database maintenance, and DC promotion
+level: medium
+tags:
+    - attack.credential-access
+    - attack.t1003.003

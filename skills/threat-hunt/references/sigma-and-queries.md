@@ -5,6 +5,7 @@ sigma-cli 3.1.0 / pySigma 1.5.1 on 2026-09-29.
 
 ## Contents
 
+- [Converting a rule](#converting-a-rule)
 - [Setup, and the trap in it](#setup-and-the-trap-in-it)
 - [Targets](#targets)
 - [Pipelines](#pipelines)
@@ -13,6 +14,28 @@ sigma-cli 3.1.0 / pySigma 1.5.1 on 2026-09-29.
 - [Where Sigma stops](#where-sigma-stops)
 - [Native patterns per platform](#native-patterns-per-platform)
 - [Conversion gotchas](#conversion-gotchas)
+
+## Converting a rule
+
+`$SKILL` below is the directory holding `SKILL.md`. The skill is usually
+symlinked, so use its real path rather than one relative to the repository you
+happen to be standing in. Use `python3`; plain `python` is absent on macOS.
+
+```sh
+$SKILL/scripts/setup_sigma.sh --check   # once, verifies every backend
+
+# Defaults to splunk kusto esql log_scale -- one dialect per platform.
+python3 $SKILL/scripts/convert.py hunts/<hunt>/queries/<name>.sigma.yml
+
+# target[:pipeline[:format]] when the data lives elsewhere:
+python3 $SKILL/scripts/convert.py <rule> --targets kusto:sentinel_asim splunk:splunk_cim
+```
+
+Targets are **query languages, not plugin names**: `log_scale` is CrowdStrike
+NG-SIEM, and `crowdstrike` is not a target. `convert.py --help` lists the targets
+with the pipelines a hunt commonly wants; `sigma list pipelines <target>` is
+authoritative. A failure on one platform never stops the others; the run reports
+what broke and writes a manifest beside the queries.
 
 ## Setup, and the trap in it
 
@@ -175,7 +198,7 @@ comparison, and comparison is outside the language.
 | Stack counting / least-frequency analysis | No | Requires aggregation, then ranking by rarity |
 | Long-tail outliers by entity | No | Requires grouping and a distribution |
 | Join across two sources | No | One log source per rule, by design |
-| Sessionise then compare to a baseline | No | Requires state across events |
+| Sessionize then compare to a baseline | No | Requires state across events |
 | Compare this week against last | No | Requires two windows and a diff |
 
 When you drop to native, write the reason into the query file header:
@@ -324,3 +347,13 @@ either precedence, and it costs one edit.
 - **A converted rule is a draft.** Read the output before running it. The
   converter guarantees syntax, never that the fields exist in your data — that is
   what the Stage 2 survey was for.
+- **A trailing backslash escapes the wildcard.** Sigma treats `\` before `*` as
+  a literal asterisk, and `|contains` adds a `*` after your value. So
+  `TargetObject|contains: '\PortProxy\v4tov4\'` converts to a KQL
+  `endswith "...v4tov4*"` that can never match. Drop the trailing backslash.
+  Found while building the Volt Typhoon worked example.
+- **Defender XDR has no table for raw Windows event logs.** A rule on
+  `service: application` or `service: security` (ESENT events, event 1102) fails
+  to convert with `microsoft_xdr` and `azure_monitor` alike: "Unable to determine
+  table name from rule." For Sentinel, hand-write it against `Event` or
+  `SecurityEvent`. For Defender XDR alone, record the signal as a gap.

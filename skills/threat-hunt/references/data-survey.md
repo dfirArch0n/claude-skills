@@ -87,7 +87,7 @@ the data component survives a tooling change; one written against an event ID
 does not.
 
 Where an estate has never been mapped this way, DeTT&CT is the tool that
-formalises it — but a first pass in the survey table below gets you further than
+formalizes it — but a first pass in the survey table below gets you further than
 waiting for a program.
 
 ## When the absence is the finding

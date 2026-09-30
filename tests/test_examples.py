@@ -9,6 +9,7 @@ An over-matching ignore rule fails silently by construction -- nothing errors,
 the file simply is not there -- so the only way to catch it is to assert.
 """
 
+import re
 import subprocess
 from pathlib import Path
 
@@ -16,6 +17,7 @@ import pytest
 
 REPO = Path(__file__).resolve().parents[1]
 EXAMPLE = REPO / "examples/hunts/rmm-persistence-walkthrough.md"
+VOLT = REPO / "examples/hunts/aa23-144a-volt-typhoon"
 
 
 def git(*args):
@@ -152,3 +154,59 @@ def test_the_trigger_check_has_a_worked_example():
     ref = (REPO / "skills/threat-hunt/references/pyramid-and-hypothesis.md").read_text()
     assert "Worked trigger check" in ref
     assert "AA24-109A" in ref
+
+
+# --- the Volt Typhoon worked example: the package the README sends people to --
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        "README.md",
+        "00-charter.md",
+        "01-data-survey.md",
+        "02-gaps.yml",
+        "03-findings.md",
+        "04-detections/ADS-0001-port-proxy-on-server.md",
+        "05-report.md",
+        "metadata.yml",
+        "queries/README.md",
+    ],
+)
+def test_the_volt_typhoon_package_is_complete_and_tracked(name):
+    # The README's headline link goes to this package. A file that exists only on
+    # the author's disk -- the failure this test module was created for -- would
+    # leave a public reader with a broken walkthrough and no error anywhere.
+    path = VOLT / name
+    assert path.is_file(), f"{name} is missing from the worked example."
+    result = git("check-ignore", "-v", str(path.relative_to(REPO)))
+    assert result.returncode != 0, f"{name} is git-ignored: {result.stdout.strip()}"
+
+
+def test_every_gap_the_package_cites_is_in_its_register():
+    # "No claim in the report outruns the register." Every GAP-00N mentioned
+    # anywhere in the package must exist in 02-gaps.yml, or the report is citing
+    # evidence that was never recorded.
+    registered = set(re.findall(r"id: (GAP-\d{3})", (VOLT / "02-gaps.yml").read_text()))
+    cited = set()
+    for path in VOLT.rglob("*.md"):
+        cited |= set(re.findall(r"GAP-\d{3}", path.read_text()))
+    assert cited, "the package cites no gaps at all, which means the survey is missing"
+    assert cited <= registered, f"cited but not registered: {sorted(cited - registered)}"
+
+
+def test_the_package_says_plainly_that_nothing_was_run():
+    # The example is a plan with an invented estate. If that caveat ever drops
+    # out of the front page or the report, a reader could take invented survey
+    # results for a real organization's findings.
+    assert "never run" in (VOLT / "README.md").read_text()
+    assert "never run" in (VOLT / "05-report.md").read_text()
+
+
+def test_generated_queries_match_their_sigma_rules():
+    # Each Sigma rule should have its converted output beside it, or be one of
+    # the two rules the README explains cannot convert to KQL.
+    generated = VOLT / "queries/generated"
+    for rule in (VOLT / "queries").glob("*.sigma.yml"):
+        stem = rule.name.removesuffix(".sigma.yml")
+        assert (generated / f"{stem}.spl").is_file(), f"no Splunk output for {rule.name}"

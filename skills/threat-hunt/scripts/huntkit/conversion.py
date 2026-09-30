@@ -1,6 +1,6 @@
 """Convert one Sigma rule to every requested platform.
 
-The design rule this module exists to honour: **a failure on one backend never
+The design rule this module exists to honor: **a failure on one backend never
 stops the others.** A hunter with four platforms and a broken Elastic plugin
 should still get Splunk, Kusto and NG-SIEM queries, plus a precise statement of
 what went wrong on the fourth — not a traceback and nothing.
