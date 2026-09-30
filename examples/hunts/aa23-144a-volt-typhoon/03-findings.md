@@ -28,8 +28,13 @@ Found during the survey, before any query:
 
 ## Bucket D — explained and normal
 
-Expected benign patterns, written down before the results arrive so that triage
-is consistent. Each one becomes a tuning filter in a detection candidate.
+None yet. Queries not run.
+
+### Expected benign patterns (written in advance, not results)
+
+Written down before the results arrive so that triage is consistent. They are
+not counted as findings. Each one that the results confirm becomes a tuning
+filter in a detection candidate.
 
 | # | Pattern | Explanation | Source of explanation |
 |---|---|---|---|
@@ -47,13 +52,17 @@ is consistent. Each one becomes a tuning filter in a detection candidate.
 
 ## Triage guide: how results would be read
 
-| Query hit | Goes to A when | Goes to D when |
+A query hit alone never lands in bucket A. The first column below means
+**escalate to incident response as a suspected compromise**; it becomes A only
+when incident response confirms it. Until then it is Open.
+
+| Query hit | Escalate as suspected compromise when | Goes to D when |
 |---|---|---|
 | `ntdsutil` IFM, shadow-copy `ntds.dit`, or ESENT naming a non-standard path | No matching change record; launched via `wmic process call create` or with output redirected to `ADMIN$`; written to `C:\Windows\Temp`, `C:\Users\Public` or `C:\Perflogs` | A change record matches the account, host, time and path |
 | Port proxy on a **server** (log or state sweep) | Listens on `0.0.0.0`; forwards to an internal address on a database or admin port; no owner claims it | An owner claims it, it matches a change, and it has an end date. **Still file a C-2 entry** so it gets written down |
 | `wmiexec` pattern | Almost always. The `ADMIN$\__<epoch>` redirect is distinctive | Authorized penetration testing only, confirmed with the test's organizer |
 | Discovery burst | The same account also appears in any hit above | Matches D-3 |
-| Event 1102 | Any host in scope, unless D-4 explains it. A cleared host's other empty results are recorded as **unknown** | Matches D-4 |
+| Event 1102 | Any host in scope, unless D-4 explains it. Either way, that host's other empty results are recorded as **unknown** | Matches D-4 |
 
 Anything that fits neither column is a **C** until someone proves otherwise.
 
@@ -65,17 +74,20 @@ exactly what it would and would not cover:
 
 **Ruled out:**
 
-- An AD database copy on 6/6 domain controllers over the last 30 days, at high
-  confidence (EDR command lines).
-- An AD database copy over days 31–180 at low confidence: 4688 process names show
+- An AD database copy **driven from the command line** (`ntdsutil` with its
+  arguments, or a shadow copy followed by a copy of `ntds.dit`) on 6/6 domain
+  controllers over the last 30 days, at high confidence (EDR command lines).
+- The same over days 31–180, at low confidence: 4688 process names show
   whether `ntdsutil.exe` ran, but not with what arguments (GAP-003).
 - Any port proxy **currently configured** on servers that remote management
   reaches, at high confidence, whatever its age.
 
 **Not ruled out:**
 
-- A renamed `ntdsutil` used more than 30 days ago. ESENT events would show it,
-  but they are not collected (GAP-002).
+- `ntdsutil` used **interactively**, or under a renamed binary, at any point in
+  the window. Neither leaves the arguments on a command line. ESENT events would
+  show both, but they are not collected (GAP-002). An `ntdsutil.exe` process on a
+  DC with no matching change is therefore escalated even without arguments.
 - A port proxy created and then deleted on one of the 48 servers without EDR
   (GAP-006).
 - A port proxy created and deleted within 30 days on an EDR server, if registry

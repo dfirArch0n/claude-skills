@@ -203,9 +203,11 @@ def test_the_package_says_plainly_that_nothing_was_run():
     assert "never run" in (VOLT / "05-report.md").read_text()
 
 
-def test_generated_queries_match_their_sigma_rules():
-    # Each Sigma rule should have its converted output beside it, or be one of
-    # the two rules the README explains cannot convert to KQL.
+def test_every_sigma_rule_has_its_generated_splunk_query():
+    # Presence only: a rule added without running the converter leaves the
+    # package's generated/ folder out of step with its rules. This does not
+    # re-convert or compare content, and it checks Splunk only, because two of
+    # the rules legitimately have no KQL output (see queries/README.md).
     generated = VOLT / "queries/generated"
     for rule in (VOLT / "queries").glob("*.sigma.yml"):
         stem = rule.name.removesuffix(".sigma.yml")

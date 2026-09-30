@@ -297,7 +297,7 @@ unreleased as of 3.0.0 (2025-11-30), which is still the newest on PyPI. When a
 release carries it, drop `BACKEND_WARNINGS["log_scale"]` from
 `scripts/huntkit/config.py` and confirm the canary converts parenthesized.
 
-## Splunk emits the same shape — and whether that is a bug is UNVERIFIED
+## Splunk emits the same shape, and there it is correct
 
 A rule meaning `(image OR parent) AND commandline` converts to Splunk as:
 
@@ -305,28 +305,23 @@ A rule meaning `(image OR parent) AND commandline` converts to Splunk as:
 Image="*\\a.exe" OR ParentImage="*\\c.exe" CommandLine="*--install*"
 ```
 
-The OR group is not parenthesized, exactly as in the LogScale output above.
-Whether that is wrong depends on SPL's precedence, and **this is not verified**:
+The OR group is not parenthesized, exactly as in the LogScale output above. In
+Splunk that is fine. Splunk's
+[`search` command reference](https://help.splunk.com/en/splunk-enterprise/search/spl-search-reference/10.4/search-commands/search)
+gives the evaluation order as parentheses, then NOT, then OR, then AND, so the
+query means `(Image OR ParentImage) AND CommandLine`, which is what the rule
+says. Checked 2026-09-30.
 
-- If SPL evaluates `OR` before the implicit `AND`, the query means
-  `(Image OR ParentImage) AND CommandLine` — correct, nothing to do.
-- If SPL binds the implicit `AND` tighter, as LogScale does, the query means
-  `Image OR (ParentImage AND CommandLine)` — wrong in the same way, on the
-  platform most of these hunts run against.
+Two cautions remain:
 
-Splunk's own documentation returned HTTP 403 to every attempt, and no
-second-hand source is good enough for a claim this load-bearing. So there is
-**no warning for `splunk` in `BACKEND_WARNINGS`** — a warning that might be
-crying wolf teaches hunters to dismiss the one that is not.
+- **`eval` and `where` are the other way round.** The same page notes they
+  evaluate AND before OR. If you move converted logic into a `where` clause,
+  parenthesize it.
+- **Parenthesizing by hand costs nothing.** It is correct under either order,
+  and it makes the intent obvious to the next reader.
 
-**The one-minute test, in your own Splunk.** Index two events: one where only
-`ParentImage` and `CommandLine` match, one where only `Image` matches. Run the
-unparenthesized query. If both return, `OR` binds tighter and the output is
-fine. If only the first returns, the output is wrong and every converted Splunk
-rule with an OR group needs hand-parenthesizing. Please record the answer here.
-
-Until then: parenthesize OR groups in Splunk output by hand. It is correct under
-either precedence, and it costs one edit.
+So there is still no warning for `splunk` in `BACKEND_WARNINGS`, now because
+none is needed rather than because nobody could check.
 
 ## Conversion gotchas
 

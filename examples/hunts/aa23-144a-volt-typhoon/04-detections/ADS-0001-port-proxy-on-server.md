@@ -85,9 +85,12 @@ netsh interface portproxy show all
 netsh interface portproxy delete v4tov4 listenaddress=0.0.0.0 listenport=9999
 ```
 
-Expect: one process alert for the `add`, one for the `delete`, and registry
-events for both. If the registry events do not appear, GAP-004 is confirmed and
-the blind spot above becomes a fact.
+Expect: one process alert for the `add`, one for the `delete`, and a registry
+event for the `add`. The registry rule watches writes (`registry_set`), not
+deletions, so the `delete` is caught by the command-line rule only. Whether EDR
+records the deletion at all is part of the GAP-004 test. If the `add` registry
+event does not appear, GAP-004 is confirmed and the blind spot above becomes a
+fact.
 
 ## Priority
 
@@ -101,13 +104,15 @@ controller or database server.
 1. Record the proxy: listen address and port, connect address and port, host,
    and the account that created it.
 2. Ask the host owner whether it is sanctioned. If not, or if nobody answers
-   within an hour, treat it as malicious.
+   within an hour, escalate to incident response as a suspected compromise.
+   Unexplained is not the same as confirmed; incident response makes that call.
 3. Search firewall logs for connections to the listen port, and examine the
    connect host.
 4. Pull everything else the creating account did in the last 30 days, starting
    with WMI-spawned processes and the `ADMIN$\__<epoch>` pattern.
-5. Do not delete the proxy before capturing the above. Removing it alerts the
-   actor and destroys the lead.
+5. Unless incident command decides to contain immediately, capture the above
+   before removing the proxy. Removing it can alert the actor and destroys the
+   lead.
 
 ## Additional Resources
 

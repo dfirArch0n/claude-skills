@@ -13,7 +13,7 @@ question, a log nobody forwards, and a coverage number nobody had checked.
 | Registry writes under `Services\PortProxy` | Windows Registry Key Modification (DC0063) | Yes (EDR) | **Unverified** | 30 days | Same as EDR | Vendor does not document whether every value write is kept | Partial → GAP-004 |
 | Current port proxy configuration | — (state, not a log) | Yes: every host holds it | Yes | Indefinite, until removed | Any host remote management reaches | Exact | **Available** |
 | Security event 1102 | Application Log Content (DC0038) | DCs only | Yes | 365 days | 6/6 DCs; **0/400 servers** | Good | Partial → GAP-005 |
-| WMI activity (who ran what through WMI) | WMI Creation (DC0008) | No | — | — | 0 | Off by default, as the advisory notes | **Absent** → GAP-007 |
+| WMI activity (who ran what through WMI) | WMI Creation (DC0008); Process Creation (DC0032) shows only the child process | No | — | — | 0 | Off by default, as the advisory notes | **Absent** → GAP-007 |
 | Traffic through a port proxy (east-west) | Network Traffic Flow (DC0078) | No | — | — | Perimeter firewall only | — | **Absent** → GAP-008 |
 
 The Evidence column comes straight from the charter's hypothesis. The ATT&CK
@@ -58,11 +58,12 @@ as the queries.
 
 ## Confidence carried into findings
 
-- **AD database copy, DCs:** high confidence across 6/6 DCs for the last 30 days
-  via EDR. Low for days 31–180: 4688 events still record that `ntdsutil.exe` ran
-  and under which account, but not its arguments (GAP-003), and ESENT events are
-  not collected (GAP-002). A renamed `ntdsutil` run 31 or more days ago would
-  survive.
+- **AD database copy, DCs:** for a copy driven from the command line, high
+  confidence across 6/6 DCs for the last 30 days via EDR. Low for days 31–180:
+  4688 events still record that `ntdsutil.exe` ran and under which account, but
+  not its arguments (GAP-003). None, in any window, for `ntdsutil` run
+  interactively or under a renamed binary, because the ESENT events that would
+  show it are not collected (GAP-002).
 - **Port proxy, servers:** high confidence for the *current* state on every
   server remote management reaches, whatever its age. Medium for proxies created
   and deleted within the last 30 days on the 352 EDR servers, because registry

@@ -22,9 +22,12 @@ WHERE key LIKE 'HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\PortProxy\v
 ## PowerShell, through whatever remote management you already run
 
 ```powershell
-Get-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Services\PortProxy\v4tov4\tcp' `
-    -ErrorAction SilentlyContinue
+$key = 'HKLM:\SYSTEM\CurrentControlSet\Services\PortProxy\v4tov4\tcp'
+if (Test-Path $key) { Get-ItemProperty -Path $key } else { 'NO PORTPROXY KEY' }
 ```
+
+Errors are deliberately left visible. A host that cannot be reached or read must
+show up as a failure, not as an empty answer.
 
 ## On a single host
 
@@ -39,7 +42,19 @@ Each value is one proxy. Its **name** is the listening address and port; its
 `0.0.0.0:9999` to port 8443, and `0.0.0.0:50100` to port 1433 (SQL Server) on
 an internal address.
 
-- **An empty result** on a server is the normal case.
+Every server lands in exactly one of three states, and the sweep's result
+records all three:
+
+- **Answered, no proxies** (`NO PORTPROXY KEY`, or the key exists but holds no
+  values). This is the normal case.
+- **Answered, proxies present.** Triage each one, as below.
+- **Did not answer**: unreachable, access denied, or an error. This is **not**
+  clean. List these servers by name; they are outside the coverage statement.
+  With osquery the trap is the same: a host that returned zero rows and a host
+  that never ran the query look identical unless you count who responded.
+
+For the servers that answered:
+
 - **Any entry on a server** is triaged. The advisory calls port proxies "not
   common for legitimate system administration."
 - **The connect address** names the next host to look at, and the listen port is

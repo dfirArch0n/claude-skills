@@ -151,8 +151,8 @@ a finding, delivered whether or not the hunt finds anything else.
 
 **Ask why each gap exists.** A host that never reported is an engineering
 problem. A host that reported until Tuesday is a hunt — ATT&CK calls that tactic
-Defense Impairment (TA0112), and its whole detection approach is watching for
-signals that stopped. Record `cause` on every gap as engineering, adversary or
+Defense Impairment (TA0112), and a signal that stopped is one of the shapes it
+leaves, alongside tampering you can see directly. Record `cause` on every gap as engineering, adversary or
 undetermined, with what you checked. An unexamined absence is the one an
 adversary is most comfortable hiding in.
 

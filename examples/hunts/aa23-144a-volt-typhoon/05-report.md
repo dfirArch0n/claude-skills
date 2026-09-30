@@ -18,8 +18,8 @@
 Leadership asked whether we are clean of Volt Typhoon, the Chinese
 state-sponsored actor in CISA advisory AA23-144A. An indicator sweep cannot
 answer that, because the advisory contains 11 file hashes and no IP addresses.
-The actor works through built-in Windows tools, not malware. We are therefore
-hunting two behaviors instead:
+The actor works mostly through tools built into Windows rather than malware.
+We are therefore hunting two behaviors instead:
 
 - copying the Active Directory database off a domain controller, which would mean
   the whole domain is compromised;
@@ -55,8 +55,8 @@ change. These two behaviors were chosen from the advisory's dozen:
   - 31 servers were never enrolled in EDR.
   - No list exists of hosts allowed to run a port proxy.
   - No alert fires when a log source stops sending a field.
-- **Explained (D):** 4 benign patterns written down in advance, so triage is
-  consistent.
+- **Explained (D):** none yet. Four expected benign patterns are written down
+  in advance so triage is consistent; they are not counted.
 - **Open:** 2, both possible tampering:
   - DC command lines stopped on one day in May.
   - 17 servers stopped reporting to EDR.
@@ -94,10 +94,10 @@ nobody has checked. GAP-004 is raised as an assumption, not a fact.
 
 Not yet established, because the queries have not run. `03-findings.md` holds the
 statement as it would read if every query came back clean. In one sentence: it
-would rule out an AD database copy for 30 days and a *currently configured* port
-proxy on every reachable server. It would not rule out a renamed tool used more
-than 30 days ago, or a proxy that was created and removed on an unmonitored
-server.
+would rule out a command-line-driven AD database copy for 30 days, and a
+*currently configured* port proxy on every server that answered the sweep. It
+would not rule out `ntdsutil` run interactively or renamed, or a proxy that was
+created and removed on an unmonitored server.
 
 ## Detections proposed
 

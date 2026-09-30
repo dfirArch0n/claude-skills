@@ -2,9 +2,13 @@
     Platform: Splunk. Not run against a live instance.
 
     Why native and not Sigma: Sigma filters one event at a time. This counts how many
-    DIFFERENT tools an account ran in a window, which needs an aggregation Sigma cannot
+    DIFFERENT tools an account ran close together, which needs an aggregation Sigma cannot
     express. The tool list is taken from the "Enumeration of the Environment" section
     of CISA AA23-144A.
+
+    Windowing: streamstats time_window is a true sliding window, so a burst that
+    straddles a clock boundary (12:09 and 12:11) is still counted together. It needs
+    events in time order, hence the sort.
 
     Replace the first line with your own process-creation search. Field names follow
     the Sigma convention (Image, CommandLine, User) used by the generated queries;
@@ -14,8 +18,10 @@
 | search tool IN ("arp.exe", "dnscmd.exe", "ipconfig.exe", "ldifde.exe", "net.exe",
     "net1.exe", "netsh.exe", "netstat.exe", "nltest.exe", "reg.exe", "systeminfo.exe",
     "tasklist.exe", "wevtutil.exe", "whoami.exe", "wmic.exe")
-| bin _time span=10m
-| stats dc(tool) AS tool_count values(tool) AS tools values(CommandLine) AS commands
-    BY _time host User
+| sort 0 _time
+| streamstats time_window=10m dc(tool) AS tool_count values(tool) AS tools BY host User
 | where tool_count >= 5
+| stats max(tool_count) AS tool_count values(tools) AS tools
+    earliest(_time) AS first_seen latest(_time) AS last_seen BY host User
+| convert ctime(first_seen) ctime(last_seen)
 | sort - tool_count

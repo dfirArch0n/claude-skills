@@ -31,7 +31,7 @@ findings:
   bucket_a: 0                 # not searched
   bucket_b: 0                 # not searched
   bucket_c: 3
-  bucket_d: 4                 # expected patterns, documented in advance
+  bucket_d: 0                 # not searched; 4 expected patterns documented in 03-findings.md
   open: 2
 
 gaps: ["GAP-001", "GAP-002", "GAP-003", "GAP-004", "GAP-005", "GAP-006", "GAP-007", "GAP-008"]
