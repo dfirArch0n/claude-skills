@@ -1,0 +1,26 @@
+title: Security Audit Log Cleared
+id: 8c3e5fb7-6a0b-4d2c-e4f5-7a8b9c0d1e77
+status: experimental
+description: >
+    Event 1102 is written when the Security log is cleared. AA23-144A says every
+    1102 should be investigated, because logs are generally not cleared and the
+    actor does it to cover their tracks. A 1102 on a host inside the hunt scope
+    also changes the meaning of any empty result from that host.
+references:
+    - https://www.cisa.gov/news-events/cybersecurity-advisories/aa23-144a
+    - https://attack.mitre.org/techniques/T1685/005/
+author: threat-hunt skill worked example
+date: 2026-09-30
+logsource:
+    product: windows
+    service: security
+detection:
+    selection:
+        EventID: 1102
+    condition: selection
+falsepositives:
+    - Build and reimaging processes that clear logs before a host enters service
+level: high
+tags:
+    - attack.defense-impairment
+    - attack.t1685.005

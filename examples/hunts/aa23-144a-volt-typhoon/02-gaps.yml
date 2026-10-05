@@ -1,0 +1,177 @@
+# Data gap register. Every partial or absent Evidence item gets an entry.
+# A gap with no owner and no ask is a complaint, not a finding.
+#
+# The estate is invented; see README.md. The owners are roles, not people.
+gaps:
+  - id: GAP-001
+    evidence: "Process creation with command line, days 31-180"
+    attack_data_component: "Process Creation (DC0032)"
+    status: partial
+    finding: >
+      EDR keeps raw process telemetry for 30 days. The hypothesis window is 180
+      days, and the actor is reported to dwell for years.
+    hypothesis_impact: >
+      Command-line evidence of an AD database copy or a port proxy older than
+      30 days cannot be searched. Most of the window is covered only by weaker
+      signals.
+    cause: engineering
+    cause_evidence: >
+      The EDR license tier sets the 30-day limit, and it has never been longer.
+    owner: "Security engineering"
+    ask: >
+      Stream process-creation events from domain controllers and Tier 0 servers
+      into the SIEM, which already keeps 365 days. The volume is small because the
+      host count is small.
+    raised: "2026-09-30"
+    hunt: "aa23-144a-volt-typhoon"
+
+  - id: GAP-002
+    evidence: "ESENT events 216/325/326/327 from domain controllers"
+    attack_data_component: "Application Log Content (DC0038)"
+    status: absent
+    finding: >
+      The DC Application log is not forwarded. ESENT events exist only on each
+      DC, until the local log rolls over.
+    hypothesis_impact: >
+      This is the one signal that records an AD database copy whatever the
+      command line looked like, including a renamed ntdsutil. It is also the
+      signal that names where the copy was written.
+    cause: engineering
+    cause_evidence: >
+      The SIEM collection configuration for DCs lists only the Security log.
+    owner: "SIEM platform team"
+    ask: >
+      Forward the Application log from DCs, filtered to source ESENT and event
+      IDs 216, 325, 326 and 327. Filtered this way, the volume is negligible.
+    raised: "2026-09-30"
+    hunt: "aa23-144a-volt-typhoon"
+
+  - id: GAP-003
+    evidence: "Command line in Windows 4688 events from domain controllers"
+    attack_data_component: "Process Creation (DC0032)"
+    status: partial
+    finding: >
+      4688 events arrive from all six DCs, but the command-line field has been
+      empty on every one of them since the same day in May. Before that date it
+      was populated.
+    hypothesis_impact: >
+      This would have been the 365-day source that covers GAP-001. Without it,
+      days 31-180 on the DCs show which processes ran but not what they did.
+    # Stopped, not never-existed. All six DCs stopping the same day points to a
+    # Group Policy change. An actor with domain admin rights could make that
+    # change, so this stays undetermined until someone produces the change record.
+    cause: undetermined
+    cause_evidence: >
+      The field stopped populating on all six DCs on the same day. No change ticket
+      has been found for that date, and the GPO history has not been reviewed yet.
+    owner: "Directory services team"
+    ask: >
+      Produce the change record for the audit policy GPO on that date. Then
+      re-enable "Include command line in process creation events," which
+      AA23-144A specifically recommends.
+    raised: "2026-09-30"
+    hunt: "aa23-144a-volt-typhoon"
+
+  - id: GAP-004
+    evidence: "Registry writes under Services\\PortProxy"
+    attack_data_component: "Windows Registry Key Modification (DC0063)"
+    status: partial
+    finding: >
+      EDR records registry events, but the vendor documentation does not say
+      whether every value write is kept. Nobody has tested it.
+    hypothesis_impact: >
+      A port proxy created and then deleted inside the window, as AA23-144A shows
+      the actor doing, may leave no registry event. The state sweep cannot see it
+      either, because it is gone.
+    cause: undetermined
+    cause_evidence: >
+      Not measured. This is an assumption, and the report says so.
+    owner: "Security engineering"
+    ask: >
+      On a lab server, add and delete a port proxy, then confirm both appear in
+      EDR registry telemetry. It takes about ten minutes.
+    raised: "2026-09-30"
+    hunt: "aa23-144a-volt-typhoon"
+
+  - id: GAP-005
+    evidence: "Security event 1102 from member servers"
+    attack_data_component: "Application Log Content (DC0038)"
+    status: partial
+    finding: >
+      Security logs are collected from DCs only. On the ~400 member servers, a
+      log clear goes unseen.
+    hypothesis_impact: >
+      An empty result from a server cannot be checked against evidence that the
+      server's logs were wiped.
+    cause: engineering
+    cause_evidence: >
+      Collection is DCs only by design, to control SIEM cost.
+    owner: "SIEM platform team"
+    ask: >
+      Collect event 1102 alone from every server. It is one event ID and very low
+      volume.
+    raised: "2026-09-30"
+    hunt: "aa23-144a-volt-typhoon"
+
+  - id: GAP-006
+    evidence: "EDR coverage of Windows servers"
+    attack_data_component: "Process Creation (DC0032)"
+    status: partial
+    finding: >
+      352 of 400 servers report to EDR. Of the 48 that do not, 31 were never
+      enrolled, and 17 enrolled and then stopped reporting between two and nine
+      months ago.
+    hypothesis_impact: >
+      Those 48 servers have no process or registry telemetry. The port proxy state
+      sweep still reaches them if remote management does.
+    # Split cause: never-enrolled is an engineering gap; stopped-reporting is a
+    # hunt lead (Defense Impairment, TA0112) and is tracked as an Open finding.
+    cause: undetermined
+    cause_evidence: >
+      EDR console last-seen dates. The 31 never-enrolled servers are an
+      engineering gap. The 17 that stopped are undetermined until each one has
+      an explanation, such as decommissioned, rebuilt or agent broken.
+    owner: "Endpoint engineering"
+    ask: >
+      Enroll the 31 servers. For each of the 17, give the reason it stopped
+      reporting, and treat any server nobody can explain as a hunt lead.
+    raised: "2026-09-30"
+    hunt: "aa23-144a-volt-typhoon"
+
+  - id: GAP-007
+    evidence: "WMI activity tracing"
+    attack_data_component: "WMI Creation (DC0008)"
+    status: absent
+    finding: >
+      WMI activity tracing is not enabled. AA23-144A notes it is off by default.
+    hypothesis_impact: >
+      The actor delivers most commands through WMI. Process telemetry shows the
+      child process, but not the remote WMI call or who made it.
+    cause: engineering
+    cause_evidence: >
+      Windows default, never changed.
+    owner: "Directory services team"
+    ask: >
+      Enable WMI activity logging on DCs and Tier 0 servers, following the
+      Microsoft guidance AA23-144A links to.
+    raised: "2026-09-30"
+    hunt: "aa23-144a-volt-typhoon"
+
+  - id: GAP-008
+    evidence: "Internal network traffic (east-west)"
+    attack_data_component: "Network Traffic Flow (DC0078)"
+    status: absent
+    finding: >
+      Only the perimeter firewall logs traffic. Nothing records connections
+      between internal hosts.
+    hypothesis_impact: >
+      If a port proxy is found, there is no way to see what traffic went through
+      it. The advisory recommends identifying exactly that.
+    cause: engineering
+    cause_evidence: >
+      No internal flow collection has ever been deployed.
+    owner: "Network engineering"
+    ask: >
+      Collect flow logs, at minimum at the boundary of the server and DC networks.
+    raised: "2026-09-30"
+    hunt: "aa23-144a-volt-typhoon"

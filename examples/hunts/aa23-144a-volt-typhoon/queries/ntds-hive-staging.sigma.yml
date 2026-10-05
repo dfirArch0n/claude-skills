@@ -1,0 +1,37 @@
+title: AD Database or Registry Hive Copied for Offline Cracking
+id: 8c2d4e61-5f3a-4b7c-9d0e-2a1b3c4d5e22
+status: experimental
+description: >
+    The manual route to the same result as ntdsutil IFM: copy ntds.dit out of a
+    volume shadow copy, or save the SAM, SYSTEM or SECURITY hive with reg.exe.
+    Both appear verbatim in AA23-144A.
+references:
+    - https://www.cisa.gov/news-events/cybersecurity-advisories/aa23-144a
+author: threat-hunt skill worked example
+date: 2026-09-30
+logsource:
+    category: process_creation
+    product: windows
+detection:
+    selection_shadow_copy:
+        CommandLine|contains|all:
+            - 'HarddiskVolumeShadowCopy'
+            - 'ntds.dit'
+    selection_reg_save:
+        CommandLine|contains|all:
+            - ' save '
+            - 'hklm'
+    selection_hive:
+        CommandLine|contains:
+            - '\sam'
+            - '\system'
+            - '\security'
+    condition: selection_shadow_copy or (selection_reg_save and selection_hive)
+falsepositives:
+    - Forensic or backup tooling that exports hives
+level: high
+tags:
+    - attack.credential-access
+    - attack.t1003.003
+    - attack.t1003.002
+    - attack.t1003.004

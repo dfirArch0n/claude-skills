@@ -39,7 +39,7 @@ def test_convert_reports_a_missing_rule_rather_than_crashing(tmp_path, capsys):
 
 
 def test_convert_writes_queries_and_exits_zero(rule, tmp_path, capsys):
-    # The happy path through the CLI, including that --output-dir is honoured
+    # The happy path through the CLI, including that --output-dir is honored
     # and the manifest lands beside the queries.
     out = tmp_path / "generated"
     code = convert_cli.main(

@@ -1,0 +1,25 @@
+title: Port Proxy Registry Key Written
+id: 6a1c3d95-4e8f-4b0a-c2d3-5e6f7a8b9c55
+status: experimental
+description: >
+    Every port proxy lives in the registry under
+    HKLM\SYSTEM\CurrentControlSet\Services\PortProxy\v4tov4\tcp, however it was
+    created. This catches proxies made with PowerShell, reg.exe or the API,
+    which the netsh command-line rule cannot see.
+references:
+    - https://www.cisa.gov/news-events/cybersecurity-advisories/aa23-144a
+author: threat-hunt skill worked example
+date: 2026-09-30
+logsource:
+    category: registry_set
+    product: windows
+detection:
+    selection:
+        TargetObject|contains: '\Services\PortProxy\v4tov4'
+    condition: selection
+falsepositives:
+    - The same developer and migration cases as the netsh rule
+level: high
+tags:
+    - attack.command-and-control
+    - attack.t1090.001

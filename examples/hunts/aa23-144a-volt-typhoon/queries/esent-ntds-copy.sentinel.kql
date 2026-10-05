@@ -1,0 +1,14 @@
+// ESENT events referencing ntds.dit, for Microsoft Sentinel.
+// Not run against a live workspace.
+//
+// Why this is hand-written: the Sigma rule esent-ntds-copy.sigma.yml does not convert
+// to KQL. Defender XDR has no table for the raw Windows Application log, so there is
+// nothing to convert to. Sentinel keeps it in the Event table, but only if the data
+// collection rule forwards the Application log from domain controllers -- which is
+// GAP-002 in this hunt.
+Event
+| where TimeGenerated > ago(30d)
+| where EventLog == "Application" and Source == "ESENT"
+| where EventID in (216, 325, 326, 327)
+| where RenderedDescription has "ntds.dit"
+| project TimeGenerated, Computer, EventID, RenderedDescription

@@ -5,6 +5,7 @@ sigma-cli 3.1.0 / pySigma 1.5.1 on 2026-09-29.
 
 ## Contents
 
+- [Converting a rule](#converting-a-rule)
 - [Setup, and the trap in it](#setup-and-the-trap-in-it)
 - [Targets](#targets)
 - [Pipelines](#pipelines)
@@ -13,6 +14,28 @@ sigma-cli 3.1.0 / pySigma 1.5.1 on 2026-09-29.
 - [Where Sigma stops](#where-sigma-stops)
 - [Native patterns per platform](#native-patterns-per-platform)
 - [Conversion gotchas](#conversion-gotchas)
+
+## Converting a rule
+
+`$SKILL` below is the directory holding `SKILL.md`. The skill is usually
+symlinked, so use its real path rather than one relative to the repository you
+happen to be standing in. Use `python3`; plain `python` is absent on macOS.
+
+```sh
+$SKILL/scripts/setup_sigma.sh --check   # once, verifies every backend
+
+# Defaults to splunk kusto esql log_scale -- one dialect per platform.
+python3 $SKILL/scripts/convert.py hunts/<hunt>/queries/<name>.sigma.yml
+
+# target[:pipeline[:format]] when the data lives elsewhere:
+python3 $SKILL/scripts/convert.py <rule> --targets kusto:sentinel_asim splunk:splunk_cim
+```
+
+Targets are **query languages, not plugin names**: `log_scale` is CrowdStrike
+NG-SIEM, and `crowdstrike` is not a target. `convert.py --help` lists the targets
+with the pipelines a hunt commonly wants; `sigma list pipelines <target>` is
+authoritative. A failure on one platform never stops the others; the run reports
+what broke and writes a manifest beside the queries.
 
 ## Setup, and the trap in it
 
@@ -175,7 +198,7 @@ comparison, and comparison is outside the language.
 | Stack counting / least-frequency analysis | No | Requires aggregation, then ranking by rarity |
 | Long-tail outliers by entity | No | Requires grouping and a distribution |
 | Join across two sources | No | One log source per rule, by design |
-| Sessionise then compare to a baseline | No | Requires state across events |
+| Sessionize then compare to a baseline | No | Requires state across events |
 | Compare this week against last | No | Requires two windows and a diff |
 
 When you drop to native, write the reason into the query file header:
@@ -274,7 +297,7 @@ unreleased as of 3.0.0 (2025-11-30), which is still the newest on PyPI. When a
 release carries it, drop `BACKEND_WARNINGS["log_scale"]` from
 `scripts/huntkit/config.py` and confirm the canary converts parenthesized.
 
-## Splunk emits the same shape — and whether that is a bug is UNVERIFIED
+## Splunk emits the same shape, and there it is correct
 
 A rule meaning `(image OR parent) AND commandline` converts to Splunk as:
 
@@ -282,28 +305,23 @@ A rule meaning `(image OR parent) AND commandline` converts to Splunk as:
 Image="*\\a.exe" OR ParentImage="*\\c.exe" CommandLine="*--install*"
 ```
 
-The OR group is not parenthesized, exactly as in the LogScale output above.
-Whether that is wrong depends on SPL's precedence, and **this is not verified**:
+The OR group is not parenthesized, exactly as in the LogScale output above. In
+Splunk that is fine. Splunk's
+[`search` command reference](https://help.splunk.com/en/splunk-enterprise/search/spl-search-reference/10.4/search-commands/search)
+gives the evaluation order as parentheses, then NOT, then OR, then AND, so the
+query means `(Image OR ParentImage) AND CommandLine`, which is what the rule
+says. Checked 2026-09-30.
 
-- If SPL evaluates `OR` before the implicit `AND`, the query means
-  `(Image OR ParentImage) AND CommandLine` — correct, nothing to do.
-- If SPL binds the implicit `AND` tighter, as LogScale does, the query means
-  `Image OR (ParentImage AND CommandLine)` — wrong in the same way, on the
-  platform most of these hunts run against.
+Two cautions remain:
 
-Splunk's own documentation returned HTTP 403 to every attempt, and no
-second-hand source is good enough for a claim this load-bearing. So there is
-**no warning for `splunk` in `BACKEND_WARNINGS`** — a warning that might be
-crying wolf teaches hunters to dismiss the one that is not.
+- **`eval` and `where` are the other way round.** The same page notes they
+  evaluate AND before OR. If you move converted logic into a `where` clause,
+  parenthesize it.
+- **Parenthesizing by hand costs nothing.** It is correct under either order,
+  and it makes the intent obvious to the next reader.
 
-**The one-minute test, in your own Splunk.** Index two events: one where only
-`ParentImage` and `CommandLine` match, one where only `Image` matches. Run the
-unparenthesized query. If both return, `OR` binds tighter and the output is
-fine. If only the first returns, the output is wrong and every converted Splunk
-rule with an OR group needs hand-parenthesizing. Please record the answer here.
-
-Until then: parenthesize OR groups in Splunk output by hand. It is correct under
-either precedence, and it costs one edit.
+So there is still no warning for `splunk` in `BACKEND_WARNINGS`, now because
+none is needed rather than because nobody could check.
 
 ## Conversion gotchas
 
@@ -324,3 +342,13 @@ either precedence, and it costs one edit.
 - **A converted rule is a draft.** Read the output before running it. The
   converter guarantees syntax, never that the fields exist in your data — that is
   what the Stage 2 survey was for.
+- **A trailing backslash escapes the wildcard.** Sigma treats `\` before `*` as
+  a literal asterisk, and `|contains` adds a `*` after your value. So
+  `TargetObject|contains: '\PortProxy\v4tov4\'` converts to a KQL
+  `endswith "...v4tov4*"` that can never match. Drop the trailing backslash.
+  Found while building the Volt Typhoon worked example.
+- **Defender XDR has no table for raw Windows event logs.** A rule on
+  `service: application` or `service: security` (ESENT events, event 1102) fails
+  to convert with `microsoft_xdr` and `azure_monitor` alike: "Unable to determine
+  table name from rule." For Sentinel, hand-write it against `Event` or
+  `SecurityEvent`. For Defender XDR alone, record the signal as a gap.

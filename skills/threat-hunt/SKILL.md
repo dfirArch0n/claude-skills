@@ -47,7 +47,7 @@ exists:
 |---|---|---|
 | Threat report / advisory | Indicators, sometimes behaviors | The climb, and local relevance |
 | ATT&CK coverage gap | A technique | Actor, location, evidence |
-| Incident lesson | Real observed behavior | Generalisation beyond the one host |
+| Incident lesson | Real observed behavior | Generalization beyond the one host |
 | Anomaly or hunch | A feeling | All of it — and the so-what gate bites hardest here |
 | Executive question | A deadline | Everything, fast |
 
@@ -151,8 +151,8 @@ a finding, delivered whether or not the hunt finds anything else.
 
 **Ask why each gap exists.** A host that never reported is an engineering
 problem. A host that reported until Tuesday is a hunt — ATT&CK calls that tactic
-Defense Impairment (TA0112), and its whole detection approach is watching for
-signals that stopped. Record `cause` on every gap as engineering, adversary or
+Defense Impairment (TA0112), and a signal that stopped is one of the shapes it
+leaves, alongside tampering you can see directly. Record `cause` on every gap as engineering, adversary or
 undetermined, with what you checked. An unexamined absence is the one an
 adversary is most comfortable hiding in.
 
@@ -163,27 +163,15 @@ every partial and absent one has a register entry with an owner.
 
 ### Write the logic once
 
-Express hunt logic as Sigma YAML, lint it, then convert it to every platform the
-human runs:
+Express hunt logic as a Sigma rule, so it is written once and read by anyone,
+then convert it to the platforms the human runs. For every query, say **what a
+hit looks like**. A query handed over without that is half a query.
 
-`$SKILL` below is the directory holding this file — the skill is usually
-symlinked, so use its real path rather than one relative to the repository you
-happen to be standing in. Use `python3`; plain `python` is absent on macOS.
-
-```sh
-$SKILL/scripts/setup_sigma.sh --check   # once, verifies every backend
-
-# Defaults to splunk kusto esql log_scale -- one dialect per platform.
-python3 $SKILL/scripts/convert.py hunts/<hunt>/queries/<name>.sigma.yml
-
-# target[:pipeline[:format]] when the data lives elsewhere:
-python3 $SKILL/scripts/convert.py <rule> --targets kusto:sentinel_asim splunk:splunk_cim
-```
-
-Targets are **query languages, not plugin names** — `log_scale` is CrowdStrike
-NG-SIEM, and `crowdstrike` is not a target. `convert.py --help` lists the targets with the
-pipelines a hunt commonly wants; `sigma list pipelines <target>` is authoritative. A failure on one platform never stops the others; the run
-reports what broke and writes a manifest beside the queries.
+Conversion is optional tooling, not the method. Where `sigma-cli` is installed,
+`scripts/convert.py` converts a rule to every platform in one run; the commands,
+pipelines and traps are in `references/sigma-and-queries.md`. Where it is not,
+hand-write the native query and keep the Sigma rule as the record of intent. A
+converter guarantees syntax, never that the fields exist in the human's data.
 
 ### Know where Sigma stops
 
@@ -194,7 +182,7 @@ deal of hunting is not that.
 |---|---|
 | Filter over one log source | Sigma, converted to every target |
 | Stack counting, rare-value or frequency analysis | Native query per platform |
-| Joins across sources, sessionisation | Native query per platform |
+| Joins across sources, sessionization | Native query per platform |
 | Time-series baseline, outlier scoring | Native query per platform |
 
 When you drop to native, say in the query file **why** Sigma could not carry it.
@@ -221,7 +209,7 @@ Every result lands in exactly one **bucket**:
 | **D** | Explained and normal | Documented, closed |
 
 B and C are outcome 4, and on most hunts they are the bulk of the value. Chase
-them with the same rigour as A; an unexplained-but-probably-fine result is a C
+them with the same rigor as A; an unexplained-but-probably-fine result is a C
 until someone proves otherwise.
 
 **Done when** every result sits in a bucket and every A, B and C names its owner.
@@ -284,7 +272,9 @@ hunts/YYYY-MM-DD-<slug>/
 
 Hunt packages hold real environment detail, so they belong in the human's own
 private hunt repository. This skill's repository keeps only sanitized examples
-built from public reporting.
+built from public reporting. A complete package built from CISA AA23-144A (Volt
+Typhoon) shows what each file looks like filled in:
+<https://github.com/dfirArch0n/claude-skills/tree/main/examples/hunts/aa23-144a-volt-typhoon>.
 
 ## References
 

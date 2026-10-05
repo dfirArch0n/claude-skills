@@ -1,0 +1,2 @@
+DeviceProcessEvents
+| where ProcessCommandLine contains "ntdsutil" and (ProcessCommandLine contains "ifm" or ProcessCommandLine contains "create full")

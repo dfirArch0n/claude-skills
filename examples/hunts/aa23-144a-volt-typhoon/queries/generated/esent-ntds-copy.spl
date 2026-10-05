@@ -1,0 +1,1 @@
+source="WinEventLog:Application" Provider_Name="ESENT" EventCode IN (216, 325, 326, 327) Data="*ntds.dit*"

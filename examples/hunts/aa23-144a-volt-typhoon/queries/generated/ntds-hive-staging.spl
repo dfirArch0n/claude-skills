@@ -1,0 +1,1 @@
+(CommandLine="*HarddiskVolumeShadowCopy*" CommandLine="*ntds.dit*") OR (CommandLine="* save *" CommandLine="*hklm*" CommandLine IN ("*\\sam*", "*\\system*", "*\\security*"))

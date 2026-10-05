@@ -531,8 +531,10 @@ def test_log_scale_output_without_a_bare_or_is_not_flagged():
 
 
 def test_other_backends_are_not_flagged():
-    # Splunk, Kusto and Elastic parenthesize correctly. Warning on them would
-    # train the hunter to skip the warning that is real.
+    # Kusto and Elastic parenthesize correctly. Splunk does not, but its search
+    # command evaluates OR before AND (per Splunk's search reference), so the
+    # bare shape means what the rule says. Warning on any of them would train
+    # the hunter to skip the warning that is real.
     assert output_warnings("splunk", 'a="1" OR b="2"') == ()
     assert output_warnings("kusto", "a == 1 or b == 2") == ()
 

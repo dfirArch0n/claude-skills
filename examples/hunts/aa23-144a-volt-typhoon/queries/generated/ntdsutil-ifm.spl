@@ -1,0 +1,1 @@
+CommandLine="*ntdsutil*" CommandLine IN ("*ifm*", "*create full*")
